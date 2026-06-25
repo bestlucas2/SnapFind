@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     ocr_workers: int = 3
     tesseract_cmd: str | None = None
 
+    # External services (optional — leave unset to disable).
+    supabase_url: str | None = None
+    supabase_anon_key: str | None = None
+    supabase_service_role_key: str | None = None
+    anthropic_api_key: str | None = None
+
     @property
     def storage_path(self) -> Path:
         p = (BASE_DIR / self.storage_dir).resolve()
