@@ -1,0 +1,93 @@
+{% extends "app_base.html" %}
+{% block title %}Profile &amp; Settings · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl">
+  <h1 class="text-2xl font-bold tracking-tight mb-1">Profile &amp; Settings</h1>
+  <p class="text-sm text-neutral-500 mb-6">Manage your account.</p>
+
+  {% if message %}
+  <div class="mb-4 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-sm">{{ message }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="mb-4 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm">{{ error }}</div>
+  {% endif %}
+
+  <!-- Identity + avatar -->
+  <div class="flex items-center gap-4 mb-6 p-5 rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-card">
+    {% if current_user.avatar_path %}
+    <img src="/profile/avatar?v={{ asset_version }}" alt="Avatar" class="w-14 h-14 rounded-full object-cover">
+    {% else %}
+    <div class="w-14 h-14 rounded-full bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 text-xl font-semibold flex items-center justify-center">
+      {{ (current_user.display_name or current_user.email)[0]|upper }}
+    </div>
+    {% endif %}
+    <div class="min-w-0 flex-1">
+      <p class="font-semibold truncate">{{ current_user.display_name }}</p>
+      <p class="text-sm text-neutral-500 truncate">{{ current_user.email }}</p>
+      <p class="text-xs text-neutral-400 mt-0.5">Member since {{ current_user.created_at|humanize }}</p>
+    </div>
+    <form action="/account/avatar" method="post" enctype="multipart/form-data" id="avatar-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="file" name="file" accept=".png,.jpg,.jpeg,.webp,image/*" class="hidden" id="avatar-input"
+             onchange="document.getElementById('avatar-form').submit()">
+      <label for="avatar-input" class="cursor-pointer inline-block px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">Change photo</label>
+    </form>
+  </div>
+
+  <!-- Profile + password -->
+  <form method="post" action="/profile" class="space-y-5 p-5 rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-card mb-5">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div>
+      <label class="block text-sm font-medium mb-1">Display name</label>
+      <input name="display_name" value="{{ current_user.display_name }}"
+             class="w-full px-3 py-2.5 rounded-lg text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-brand-400 outline-none">
+    </div>
+    <div class="border-t border-neutral-100 dark:border-neutral-800 pt-5">
+      <h3 class="text-sm font-semibold mb-3">Change password</h3>
+      <div class="space-y-3">
+        <input name="current_password" type="password" placeholder="Current password"
+               class="w-full px-3 py-2.5 rounded-lg text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-brand-400 outline-none">
+        <input name="new_password" type="password" placeholder="New password (min 6 chars)"
+               class="w-full px-3 py-2.5 rounded-lg text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-brand-400 outline-none">
+      </div>
+      <p class="text-xs text-neutral-400 mt-2">Leave password fields blank to keep your current password.</p>
+    </div>
+    <div class="flex justify-end">
+      <button class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white">Save changes</button>
+    </div>
+  </form>
+
+  <!-- Email -->
+  <form method="post" action="/account/email" class="p-5 rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-card mb-5">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h3 class="text-sm font-semibold mb-3">Email address</h3>
+    <div class="flex gap-2">
+      <input name="email" type="email" value="{{ current_user.email }}" required
+             class="flex-1 px-3 py-2.5 rounded-lg text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-brand-400 outline-none">
+      <button class="px-4 py-2.5 rounded-lg text-sm font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">Update</button>
+    </div>
+  </form>
+
+  <!-- Data + danger zone -->
+  <div class="p-5 rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-card">
+    <h3 class="text-sm font-semibold mb-1">Your data</h3>
+    <p class="text-xs text-neutral-500 mb-3">Download a ZIP of all your screenshots and their metadata.</p>
+    <a href="/account/export" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+      Export all my data
+    </a>
+
+    <div class="border-t border-red-100 dark:border-red-900/40 mt-5 pt-5">
+      <h3 class="text-sm font-semibold text-red-600">Delete account</h3>
+      <p class="text-xs text-neutral-500 mb-3">Permanently deletes your account, all screenshots, and files. This cannot be undone.</p>
+      <form method="post" action="/account/delete" class="flex gap-2"
+            onsubmit="return confirm('Permanently delete your account and all data? This cannot be undone.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input name="current_password" type="password" placeholder="Current password" required
+               class="flex-1 px-3 py-2.5 rounded-lg text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-400 outline-none">
+        <button class="px-4 py-2.5 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-700 text-white shrink-0">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

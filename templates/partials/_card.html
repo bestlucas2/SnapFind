@@ -1,0 +1,55 @@
+<article id="card-{{ shot.id }}" data-screenshot-id="{{ shot.id }}" {% if not shot.deleted_at %}draggable="true"{% endif %}
+  class="ss-card group relative bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/70 dark:border-neutral-800 shadow-card hover:shadow-lg hover:-translate-y-0.5 transition-all overflow-hidden">
+
+  <div class="relative">
+    {% if shot.deleted_at %}
+    <div class="block aspect-[4/3] bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
+      <img src="/screenshot/{{ shot.id }}/thumb" loading="lazy" alt="{{ shot.filename }}" class="w-full h-full object-cover opacity-60">
+    </div>
+    {% else %}
+    <a href="/screenshot/{{ shot.id }}{% if request.url.query %}?{{ request.url.query }}{% endif %}" class="block aspect-[4/3] bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
+      <img src="/screenshot/{{ shot.id }}/thumb" loading="lazy" alt="{{ shot.filename }}" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300">
+    </a>
+    {% endif %}
+
+    <!-- Selection checkbox (both states) -->
+    <label class="ss-select-label absolute top-2 left-2 z-10">
+      <input type="checkbox" class="ss-select w-5 h-5 rounded accent-brand-600 cursor-pointer align-middle" data-id="{{ shot.id }}" aria-label="Select">
+    </label>
+
+    {% if not shot.deleted_at %}
+    <span class="absolute bottom-2 left-2 px-2 py-0.5 rounded-md text-[11px] font-medium bg-black/55 text-white backdrop-blur-sm">{{ shot.category }}</span>
+    <div class="absolute top-2 right-2 z-10">{% include "partials/_favorite_button.html" %}</div>
+    {% endif %}
+  </div>
+
+  <div class="p-3">
+    {% if shot.deleted_at %}
+    <p class="font-medium text-sm truncate">{{ shot.filename }}</p>
+    <p class="text-xs text-neutral-400 mt-1">Deleted {{ shot.deleted_at|humanize }}</p>
+    <div class="flex gap-2 mt-2">
+      <button hx-post="/screenshot/{{ shot.id }}/restore" hx-target="#card-{{ shot.id }}" hx-swap="outerHTML"
+              class="flex-1 px-2 py-1 rounded-lg text-xs font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">Restore</button>
+      <button hx-delete="/screenshot/{{ shot.id }}/permanent" hx-target="#card-{{ shot.id }}" hx-swap="outerHTML"
+              hx-confirm="Permanently delete “{{ shot.filename }}”? This cannot be undone."
+              class="px-2 py-1 rounded-lg text-xs font-medium text-red-600 border border-red-200 dark:border-red-900/60 hover:bg-red-50 dark:hover:bg-red-950/30">Delete</button>
+    </div>
+    {% else %}
+    <a href="/screenshot/{{ shot.id }}{% if request.url.query %}?{{ request.url.query }}{% endif %}" class="block font-medium text-sm truncate hover:text-brand-600">{{ shot.filename }}</a>
+    <div class="flex items-center justify-between gap-2 mt-1.5">
+      <span class="text-xs text-neutral-400 shrink-0">{{ shot.created_at|humanize }}</span>
+      {% include "partials/_status_badge.html" %}
+    </div>
+    {% if snippets and snippets.get(shot.id) %}
+    <p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-snug">{{ snippets[shot.id]|safe }}</p>
+    {% endif %}
+    {% if shot.tags %}
+    <div class="flex flex-wrap gap-1 mt-2">
+      {% for t in shot.tags[:3] %}
+      <span class="px-1.5 py-0.5 rounded text-[11px] bg-neutral-100 dark:bg-neutral-800 text-neutral-500">#{{ t.name }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+</article>

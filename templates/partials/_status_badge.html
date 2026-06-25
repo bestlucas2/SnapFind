@@ -1,0 +1,18 @@
+{% set s = shot.ocr_status %}
+<span id="status-{{ shot.id }}"
+  {% if s == 'processing' %}hx-get="/status/{{ shot.id }}" hx-trigger="every 2s" hx-target="this" hx-swap="outerHTML"{% endif %}
+  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium
+  {% if s == 'indexed' %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300
+  {% elif s == 'failed' %}bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300
+  {% else %}bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300{% endif %}">
+  {% if s == 'processing' %}
+    <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+    Processing
+  {% elif s == 'indexed' %}
+    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+    Indexed
+  {% else %}
+    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 9v4m0 4h.01M10.3 4.3l-7 12A1 1 0 004 18h16a1 1 0 00.9-1.5l-7-12a1 1 0 00-1.7 0z"/></svg>
+    Failed
+  {% endif %}
+</span>

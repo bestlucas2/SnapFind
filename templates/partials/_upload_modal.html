@@ -1,0 +1,107 @@
+<div x-show="upload" x-cloak @keydown.escape.window="upload = false"
+     class="fixed inset-0 z-[55] flex items-start sm:items-center justify-center p-4" style="display:none">
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="upload = false"></div>
+
+  <div x-show="upload" x-transition
+       class="relative w-full max-w-xl bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 max-h-[92vh] overflow-y-auto">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 sticky top-0 bg-white dark:bg-neutral-900 z-10">
+      <h2 class="text-lg font-semibold">Upload screenshots</h2>
+      <button @click="upload = false" class="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="p-5">
+      <form id="upload-form" hx-post="/upload" hx-target="#upload-results" hx-swap="innerHTML"
+            hx-encoding="multipart/form-data" hx-indicator="#upload-progress">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="tags" id="upload-tags-hidden" value="">
+
+        <label id="dropzone" for="file-input"
+               class="block border-2 border-dashed border-neutral-300 dark:border-neutral-700 rounded-xl p-6 text-center cursor-pointer hover:border-brand-400 hover:bg-brand-50/40 dark:hover:bg-brand-950/20 transition">
+          <svg class="w-9 h-9 mx-auto text-neutral-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          <p class="mt-2 text-sm font-medium">Drag &amp; drop, paste (Ctrl+V), or <span class="text-brand-600">browse</span></p>
+          <p class="text-xs text-neutral-400 mt-1">PNG · JPG · JPEG · WEBP — up to {{ settings.max_upload_mb }} MB each</p>
+          <input id="file-input" name="files" type="file" multiple
+                 accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" class="hidden">
+        </label>
+
+        <!-- Previews of selected images -->
+        <div id="upload-previews" class="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-3 empty:hidden"></div>
+        <p id="file-count" class="text-xs text-neutral-500 mt-2 min-h-[1rem]"></p>
+
+        <!-- Category (custom rounded dropdown) -->
+        <div class="mt-4" x-data='categoryPicker({{ all_categories|tojson }})'
+             @snap-set-category.window="value = $event.detail"
+             @snap-reset-upload.window="value = ''; open = false">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-1">Category</label>
+          <div class="relative">
+            <input id="upload-category" name="category" x-model="value" autocomplete="off"
+                   @focus="open = true" @input="open = true"
+                   placeholder="Auto-detect, or pick / type a category"
+                   class="w-full pl-3 pr-9 py-2 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none">
+            <button type="button" tabindex="-1" @click="open = !open"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300">
+              <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+            </button>
+
+            <div x-show="open" x-transition @click.outside="open = false" style="display:none"
+                 class="absolute z-30 mt-1 w-full max-h-44 overflow-y-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-card p-1">
+              <template x-for="c in filtered()" :key="c">
+                <button type="button" @click="select(c)"
+                        class="w-full text-left px-3 py-1.5 rounded-lg text-sm transition hover:bg-brand-50 dark:hover:bg-brand-950/40 hover:ring-1 hover:ring-brand-400"
+                        :class="value === c ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 font-medium' : 'text-neutral-700 dark:text-neutral-300'"
+                        x-text="c"></button>
+              </template>
+              <button x-show="canCreate()" type="button" @click="select(value)"
+                      class="w-full text-left px-3 py-1.5 rounded-lg text-sm text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 hover:ring-1 hover:ring-brand-400 transition">
+                Create &ldquo;<span x-text="value"></span>&rdquo;
+              </button>
+              <p x-show="!filtered().length && !canCreate()" class="px-3 py-1.5 text-xs text-neutral-400">No matches</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="mt-4">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-1">Tags</label>
+          <div id="upload-tag-chips" data-max-tags="{{ max_tags }}" class="flex flex-wrap gap-1.5 mb-2 empty:hidden"></div>
+          <div class="relative">
+            <div class="flex gap-2">
+              <input id="upload-tag-input" autocomplete="off"
+                     placeholder="Type or pick a tag…"
+                     class="flex-1 px-3 py-2 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+              <button type="button" id="upload-tag-add"
+                      class="px-3 py-2 rounded-lg text-sm font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed">Add</button>
+            </div>
+            <div id="upload-tag-menu"
+                 class="hidden absolute z-30 left-0 right-0 mt-1 max-h-44 overflow-y-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-card p-1"></div>
+          </div>
+          <script id="upload-tag-names" type="application/json">{{ all_tag_names|tojson }}</script>
+
+          <!-- AI suggestions -->
+          <div class="mt-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium text-neutral-500">Suggested by AI</span>
+              <span id="upload-suggest-status" class="text-xs text-neutral-400"></span>
+            </div>
+            <div id="upload-suggestions" class="flex flex-wrap gap-1.5 mt-1.5"></div>
+          </div>
+        </div>
+
+        <div id="upload-progress" class="htmx-indicator mt-4 h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+          <div id="upload-bar" class="h-full bg-brand-600 rounded-full transition-all" style="width:0%"></div>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" @click="upload = false"
+                  class="px-4 py-2 rounded-lg text-sm font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">Cancel</button>
+          <button type="submit"
+                  class="px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white">Upload &amp; index</button>
+        </div>
+      </form>
+
+      <div id="upload-results" class="mt-4"></div>
+    </div>
+  </div>
+</div>

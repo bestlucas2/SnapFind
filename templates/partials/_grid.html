@@ -1,0 +1,28 @@
+{% if screenshots %}
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+  {% for shot in screenshots %}{% include "partials/_card.html" %}{% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center text-center py-20 px-4">
+  <div class="w-16 h-16 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
+    <svg class="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path stroke-linecap="round" d="M21 15l-5-5L5 21"/></svg>
+  </div>
+  {% if q %}
+    <h3 class="text-lg font-semibold">No matches for “{{ q }}”</h3>
+    <p class="text-sm text-neutral-500 mt-1 max-w-sm">Try fewer words, or operators like <code class="px-1 rounded bg-neutral-100 dark:bg-neutral-800">tag:receipt</code>, <code class="px-1 rounded bg-neutral-100 dark:bg-neutral-800">after:2026-01-01</code>.</p>
+  {% elif view == 'archive' %}
+    <h3 class="text-lg font-semibold">Archive is empty</h3>
+    <p class="text-sm text-neutral-500 mt-1">Archived screenshots are hidden from your library but kept here.</p>
+  {% elif view == 'trash' %}
+    <h3 class="text-lg font-semibold">Trash is empty</h3>
+    <p class="text-sm text-neutral-500 mt-1">Deleted screenshots land here for 30 days, then are removed for good.</p>
+  {% elif view == 'favorites' %}
+    <h3 class="text-lg font-semibold">No favorites yet</h3>
+    <p class="text-sm text-neutral-500 mt-1">Tap the heart on any screenshot to pin it here.</p>
+  {% else %}
+    <h3 class="text-lg font-semibold">No screenshots yet</h3>
+    <p class="text-sm text-neutral-500 mt-1 mb-4">Upload a few and SnapFind will OCR, tag, and index them automatically.</p>
+    <button @click="upload = true" class="px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white">Upload screenshots</button>
+  {% endif %}
+</div>
+{% endif %}

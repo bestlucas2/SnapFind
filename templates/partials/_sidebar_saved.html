@@ -1,0 +1,22 @@
+<div id="sidebar-saved">
+  <h3 class="text-xs font-semibold uppercase tracking-wider text-neutral-400 px-3 mb-2">Saved searches</h3>
+  {% if saved_searches %}
+  <div class="space-y-0.5">
+    {% for s in saved_searches %}
+    <div class="group flex items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+      <a href="/app?q={{ s.query|urlencode }}" class="flex-1 flex items-center gap-3 px-3 py-2 text-sm min-w-0 text-neutral-700 dark:text-neutral-300" title="{{ s.query }}">
+        <svg class="w-4 h-4 shrink-0 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 4h12a1 1 0 011 1v15l-7-4-7 4V5a1 1 0 011-1z"/></svg>
+        <span class="truncate flex-1">{{ s.name }}</span>
+      </a>
+      <button hx-delete="/saved-searches/{{ s.id }}" hx-target="#sidebar-saved" hx-swap="outerHTML"
+              hx-confirm="Delete saved search “{{ s.name }}”?"
+              class="opacity-0 group-hover:opacity-100 px-2 text-neutral-400 hover:text-red-500 transition" title="Delete">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="px-3 py-1.5 text-xs text-neutral-400">Run a search, then <span class="font-medium">Save</span> to pin it here.</p>
+  {% endif %}
+</div>

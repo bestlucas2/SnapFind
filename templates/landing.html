@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ app_name }} — Find any screenshot in seconds{% endblock %}
+{% block body %}
+<div class="min-h-full flex flex-col">
+  <header class="flex items-center justify-between px-5 sm:px-8 h-16">
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9V5a2 2 0 012-2h4M21 9V5a2 2 0 00-2-2h-4M3 15v4a2 2 0 002 2h4M21 15v4a2 2 0 01-2 2h-4"/><circle cx="12" cy="12" r="3"/></svg>
+      </span>
+      <span class="font-bold text-lg tracking-tight">{{ app_name }}</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
+        <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+      </button>
+      {% if current_user %}
+        <a href="/app" class="px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white">Open {{ app_name }}</a>
+      {% else %}
+        <a href="/login" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800">Log in</a>
+        <a href="/register" class="px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white">Get started</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="flex-1 flex items-center justify-center px-4">
+    <div class="max-w-2xl text-center py-16">
+      <span class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-lg mb-8">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9V5a2 2 0 012-2h4M21 9V5a2 2 0 00-2-2h-4M3 15v4a2 2 0 002 2h4M21 15v4a2 2 0 01-2 2h-4"/><circle cx="12" cy="12" r="3.2"/></svg>
+      </span>
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight">Find any screenshot in seconds</h1>
+      <p class="mt-5 text-lg text-neutral-500 dark:text-neutral-400 max-w-xl mx-auto">
+        SnapFind reads the text inside every screenshot with OCR, then tags, sorts, and makes it instantly searchable — so you never scroll your camera roll again.
+      </p>
+      <div class="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="{{ '/app' if current_user else '/register' }}"
+           class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          Upload Screenshots
+        </a>
+        <a href="/login?email=demo@snapfind.app"
+           class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+          Try Demo
+        </a>
+      </div>
+      <p class="mt-4 text-xs text-neutral-400">Demo account — <span class="font-mono">demo@snapfind.app</span> / <span class="font-mono">demo1234</span></p>
+
+      <div class="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+        {% set feats = [
+          ('Instant OCR search', 'Full-text search across everything written inside your images.'),
+          ('Auto tags & folders', 'Keywords and categories generated for you on every upload.'),
+          ('Timeline & dashboard', 'See trends, storage, and find shots by when you took them.')
+        ] %}
+        {% for title, body in feats %}
+        <div class="rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-card">
+          <h3 class="font-semibold text-sm">{{ title }}</h3>
+          <p class="text-sm text-neutral-500 mt-1">{{ body }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center text-xs text-neutral-400 py-6">{{ app_name }} · built with FastAPI, HTMX &amp; Tesseract</footer>
+</div>
+{% endblock %}

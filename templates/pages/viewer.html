@@ -1,0 +1,141 @@
+{% extends "app_base.html" %}
+{% block title %}{{ shot.filename }} · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="mb-4">
+  <a href="javascript:history.back()" class="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15 18l-6-6 6-6"/></svg>
+    Back
+  </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
+  <!-- Image with zoom / pan -->
+  <div>
+    <div id="zoom-wrap" data-screenshot-id="{{ shot.id }}" class="relative overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 h-[55vh] lg:h-[calc(100vh-10rem)] flex items-center justify-center">
+      <img id="zoom-img" data-zoom src="/screenshot/{{ shot.id }}/raw" alt="{{ shot.filename }}" draggable="false"
+           class="max-w-full max-h-full object-contain select-none cursor-grab transition-transform duration-75">
+      <div class="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg bg-white/90 dark:bg-neutral-800/90 backdrop-blur border border-neutral-200 dark:border-neutral-700 shadow-sm p-1">
+        <button id="zoom-out" class="p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700" title="Zoom out"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M5 12h14"/></svg></button>
+        <button id="zoom-reset" class="px-2 py-1 text-xs rounded hover:bg-neutral-100 dark:hover:bg-neutral-700" title="Reset">Fit</button>
+        <button id="zoom-in" class="p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700" title="Zoom in"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+    </div>
+    <p class="text-xs text-neutral-400 mt-2 text-center">Scroll to zoom · drag to pan</p>
+  </div>
+
+  <!-- Details + controls -->
+  <div class="space-y-5" x-data="{ editing: false }">
+    <!-- Title + rename -->
+    <div>
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0 flex-1" x-show="!editing">
+          {% include "partials/_title.html" %}
+        </div>
+        <button x-show="!editing" @click="editing = true" class="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800" title="Rename">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.5a2 2 0 013 3L7 19l-4 1 1-4z"/></svg>
+        </button>
+      </div>
+      <form x-show="editing" style="display:none" class="flex gap-2"
+            hx-post="/screenshot/{{ shot.id }}/rename" hx-target="#title-{{ shot.id }}" hx-swap="outerHTML"
+            @submit="editing = false">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input name="filename" value="{{ shot.filename }}" class="flex-1 px-3 py-1.5 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none">
+        <button class="px-3 py-1.5 rounded-lg text-sm bg-brand-600 text-white">Save</button>
+      </form>
+      <div class="flex items-center gap-2 mt-2 text-sm text-neutral-500">
+        <span class="px-2 py-0.5 rounded-md text-xs bg-neutral-100 dark:bg-neutral-800">{{ shot.category }}</span>
+        {% include "partials/_status_badge.html" %}
+      </div>
+    </div>
+
+    <!-- Quick controls -->
+    <div class="flex flex-wrap items-center gap-2">
+      <div id="viewer-fav">{% include "partials/_favorite_button.html" %}</div>
+      <a href="/screenshot/{{ shot.id }}/download"
+         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>Download
+      </a>
+      <button hx-post="/screenshot/{{ shot.id }}/archive" data-toast="{{ 'Unarchived' if shot.archived else 'Archived' }}"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M5 7l1 13h12l1-13M9 11h6"/></svg>
+        {{ 'Unarchive' if shot.archived else 'Archive' }}
+      </button>
+      <button hx-post="/screenshot/{{ shot.id }}/retry" hx-target="#status-{{ shot.id }}" hx-swap="outerHTML" data-toast="Re-running OCR"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M5 19A9 9 0 0119 5"/></svg>
+        Retry OCR
+      </button>
+      <button hx-delete="/screenshot/{{ shot.id }}?redirect=/app" hx-confirm="Delete this screenshot permanently?"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-red-600 border border-red-200 dark:border-red-900/60 hover:bg-red-50 dark:hover:bg-red-950/30">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-7 0v12a1 1 0 001 1h6a1 1 0 001-1V7"/></svg>
+        Delete
+      </button>
+    </div>
+
+    <!-- Collection -->
+    <div>
+      <label class="text-xs font-semibold uppercase tracking-wider text-neutral-400">Collection</label>
+      <form hx-post="/screenshot/{{ shot.id }}/move" data-toast="Moved" class="mt-1">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <select name="collection_id" onchange="htmx.trigger(this.form, 'submit')"
+                class="w-full px-3 py-2 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none">
+          <option value="0">— None —</option>
+          {% for c in all_collections %}
+          <option value="{{ c.id }}" {{ 'selected' if shot.collection_id == c.id else '' }}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+    <!-- Category -->
+    <div>
+      <label class="text-xs font-semibold uppercase tracking-wider text-neutral-400">Category</label>
+      <input name="category" list="viewer-categories" value="{{ shot.category }}" autocomplete="off"
+             hx-post="/screenshot/{{ shot.id }}/category" hx-trigger="change" hx-swap="none"
+             data-toast="Category updated"
+             class="mt-1 w-full px-3 py-2 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none">
+      <datalist id="viewer-categories">
+        {% for c in all_categories %}<option value="{{ c }}">{% endfor %}
+      </datalist>
+    </div>
+
+    <!-- Tags -->
+    <div>
+      <label class="text-xs font-semibold uppercase tracking-wider text-neutral-400">Tags</label>
+      <div class="mt-1.5">{% include "partials/_tags.html" %}</div>
+    </div>
+
+    <!-- Notes -->
+    <div>
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-semibold uppercase tracking-wider text-neutral-400">Notes</label>
+        <span id="notes-status" class="text-xs"></span>
+      </div>
+      <textarea name="notes" rows="3" placeholder="Add a note…"
+                hx-post="/screenshot/{{ shot.id }}/notes" hx-target="#notes-status" hx-swap="innerHTML"
+                hx-trigger="keyup changed delay:800ms"
+                class="mt-1.5 w-full px-3 py-2 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none resize-y">{{ shot.notes }}</textarea>
+    </div>
+
+    <!-- OCR text -->
+    <div>
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-semibold uppercase tracking-wider text-neutral-400">Extracted text (OCR)</label>
+        <button onclick="copyText('ocr-text')" class="text-xs text-brand-600 hover:underline">Copy</button>
+      </div>
+      <pre id="ocr-text" class="mt-1.5 max-h-56 overflow-auto whitespace-pre-wrap break-words text-sm p-3 rounded-lg bg-neutral-100 dark:bg-neutral-800 font-sans">{% if shot.ocr_text %}{{ linkify_ocr(shot.ocr_text) }}{% else %}No text detected yet.{% endif %}</pre>
+      {% if shot.ocr_error %}<p class="text-xs text-red-500 mt-1">{{ shot.ocr_error }}</p>{% endif %}
+    </div>
+
+    <!-- Info -->
+    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm border-t border-neutral-100 dark:border-neutral-800 pt-4">
+      <dt class="text-neutral-400">Uploaded</dt><dd>{{ shot.created_at|humanize }}</dd>
+      <dt class="text-neutral-400">Size</dt><dd>{{ shot.size_human }}</dd>
+      <dt class="text-neutral-400">Dimensions</dt><dd>{% if shot.width %}{{ shot.width }} × {{ shot.height }}{% else %}—{% endif %}</dd>
+      <dt class="text-neutral-400">Type</dt><dd class="truncate">{{ shot.content_type }}</dd>
+      <dt class="text-neutral-400">Hash</dt><dd class="font-mono text-xs truncate" title="{{ shot.image_hash }}">{{ shot.image_hash or '—' }}</dd>
+      <dt class="text-neutral-400">Original</dt><dd class="truncate" title="{{ shot.original_filename }}">{{ shot.original_filename }}</dd>
+    </dl>
+  </div>
+</div>
+{% endblock %}

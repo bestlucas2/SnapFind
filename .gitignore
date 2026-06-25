@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Env / secrets
+.env
+
+# Local SQLite fallback
+*.db
+*.sqlite3
+
+# Uploaded files (user content)
+uploads/
+
+# Generated seed images (regenerate via python -m seed.seed)
+seed/images/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

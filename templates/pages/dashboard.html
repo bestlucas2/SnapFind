@@ -1,0 +1,103 @@
+{% extends "app_base.html" %}
+{% block title %}Dashboard · {{ app_name }}{% endblock %}
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold tracking-tight mb-1">Dashboard</h1>
+<p class="text-sm text-neutral-500 mb-6">An overview of your screenshot library.</p>
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <!-- Total -->
+  <div class="rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-card">
+    <p class="text-sm text-neutral-500">Total screenshots</p>
+    <p class="text-3xl font-bold mt-1">{{ stats.total }}</p>
+    <p class="text-xs text-neutral-400 mt-1">{{ stats.archived }} archived</p>
+  </div>
+  <!-- Storage -->
+  <div class="rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-card">
+    <p class="text-sm text-neutral-500">Storage used</p>
+    <p class="text-3xl font-bold mt-1">{{ stats.storage_bytes|filesizeformat }}</p>
+    <p class="text-xs text-neutral-400 mt-1">across {{ stats.total_all }} files</p>
+  </div>
+  <!-- OCR rate -->
+  <div class="rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-card">
+    <p class="text-sm text-neutral-500">OCR completion</p>
+    <p class="text-3xl font-bold mt-1">{{ stats.ocr_rate }}%</p>
+    <div class="mt-2 h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+      <div class="h-full bg-emerald-500 rounded-full" style="width: {{ stats.ocr_rate }}%"></div>
+    </div>
+    <p class="text-xs text-neutral-400 mt-1">{{ stats.processing }} processing · {{ stats.failed }} failed</p>
+  </div>
+  <!-- Favorites / collections -->
+  <div class="rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-card">
+    <p class="text-sm text-neutral-500">Favorites</p>
+    <p class="text-3xl font-bold mt-1">{{ stats.favorites }}</p>
+    <p class="text-xs text-neutral-400 mt-1">{{ stats.collections_count }} collections · {{ stats.tags_count }} tags</p>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-2 rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-card">
+    <h3 class="font-semibold mb-4">Upload trend <span class="text-xs font-normal text-neutral-400">· last 14 days</span></h3>
+    <canvas id="trendChart" height="120"></canvas>
+  </div>
+  <div class="rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-card">
+    <h3 class="font-semibold mb-4">Top categories</h3>
+    {% if stats.categories %}
+    <canvas id="catChart" height="160"></canvas>
+    <ul class="mt-4 space-y-1.5 text-sm">
+      {% for c in stats.categories[:6] %}
+      <li><a href="/app?category={{ c.name|urlencode }}" class="flex items-center justify-between hover:text-brand-600">
+        <span>{{ c.name }}</span><span class="text-neutral-400">{{ c.count }}</span></a></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-sm text-neutral-400">No data yet — upload some screenshots.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const trend = {{ stats.trend|tojson }};
+  const cats = {{ stats.categories|tojson }};
+  const isDark = document.documentElement.classList.contains('dark');
+  const grid = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const tick = isDark ? '#a3a3a3' : '#737373';
+
+  if (window.Chart && document.getElementById('trendChart')) {
+    new Chart(document.getElementById('trendChart'), {
+      type: 'line',
+      data: {
+        labels: trend.map(t => t.label),
+        datasets: [{
+          data: trend.map(t => t.count),
+          borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.12)',
+          fill: true, tension: 0.35, pointRadius: 2, borderWidth: 2
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: tick, maxRotation: 0, autoSkip: true } },
+          y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, precision: 0 } }
+        }
+      }
+    });
+  }
+
+  if (window.Chart && cats.length && document.getElementById('catChart')) {
+    const palette = ['#6366f1','#22c55e','#f59e0b','#ef4444','#06b6d4','#a855f7','#64748b'];
+    new Chart(document.getElementById('catChart'), {
+      type: 'doughnut',
+      data: {
+        labels: cats.map(c => c.name),
+        datasets: [{ data: cats.map(c => c.count), backgroundColor: palette, borderWidth: 0 }]
+      },
+      options: { cutout: '62%', plugins: { legend: { display: false } } }
+    });
+  }
+</script>
+{% endblock %}

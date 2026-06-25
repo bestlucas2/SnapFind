@@ -1,0 +1,8 @@
+<button hx-post="/screenshot/{{ shot.id }}/favorite" hx-target="this" hx-swap="outerHTML"
+        title="{{ 'Remove from favorites' if shot.favorite else 'Add to favorites' }}"
+        class="inline-flex items-center justify-center w-8 h-8 rounded-full backdrop-blur bg-white/80 dark:bg-neutral-900/70 shadow-sm hover:scale-110 transition
+        {{ 'text-red-500' if shot.favorite else 'text-neutral-500 hover:text-red-500' }}">
+  <svg class="w-4 h-4" fill="{{ 'currentColor' if shot.favorite else 'none' }}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 5 4 3 6.5 3c1.5 0 2.9.7 3.8 1.8L12 6.2l1.7-1.4A4.9 4.9 0 0117.5 3C20 3 22 5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z"/>
+  </svg>
+</button>

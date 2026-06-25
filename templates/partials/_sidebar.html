@@ -1,0 +1,73 @@
+{% set path = request.url.path %}
+{% set v = request.query_params.get('view') %}
+{% set has_filter = request.query_params.get('collection_id') or request.query_params.get('tag') or request.query_params.get('category') %}
+{% set on_app = path == '/app' %}
+{% set ACT = "bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 font-semibold" %}
+{% set IDLE = "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800" %}
+
+<aside
+  class="fixed inset-y-0 left-0 z-40 w-72 shrink-0 flex flex-col
+         bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800
+         transform -translate-x-full lg:translate-x-0 lg:static lg:inset-auto
+         max-lg:transition-transform max-lg:duration-300 max-lg:ease-out"
+  :class="{ 'max-lg:translate-x-0': sidebar }">
+
+  <!-- Scroll area (overscroll-contain stops scroll from chaining to the page).
+       Closing on mobile is handled by tapping the dimmed overlay (see app_base). -->
+  <div class="flex-1 overflow-y-auto overscroll-contain p-3 pt-4 space-y-6">
+
+    <nav class="space-y-0.5">
+      <a href="/app" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm {{ ACT if on_app and v in [none,'','all'] and not has_filter else IDLE }}">
+        <span class="flex items-center gap-3">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          All Screenshots
+        </span>
+        <span class="text-xs text-neutral-400">{{ nav_counts.all }}</span>
+      </a>
+      <a href="/app?view=favorites" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm {{ ACT if on_app and v=='favorites' else IDLE }}">
+        <span class="flex items-center gap-3">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.5 4.5l2 4.2 4.6.6-3.4 3.2.9 4.5-4-2.2-4 2.2.9-4.5L4.6 9.3l4.6-.6z"/></svg>
+          Favorites
+        </span>
+        <span class="text-xs text-neutral-400">{{ nav_counts.favorites }}</span>
+      </a>
+      <a href="/app?view=recent" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ ACT if on_app and v=='recent' else IDLE }}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 8v4l3 2"/></svg>
+        Recent
+      </a>
+      <a href="/timeline" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ ACT if path=='/timeline' else IDLE }}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 3v18M6 7h13M6 12h10M6 17h13"/></svg>
+        Timeline
+      </a>
+      <a href="/app?view=archive" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm {{ ACT if on_app and v=='archive' else IDLE }}">
+        <span class="flex items-center gap-3">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M5 7l1 13h12l1-13M9 11h6"/></svg>
+          Archive
+        </span>
+        <span class="text-xs text-neutral-400">{{ nav_counts.archive }}</span>
+      </a>
+      <a href="/app?view=trash" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm {{ ACT if on_app and v=='trash' else IDLE }}">
+        <span class="flex items-center gap-3">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-7 0v12a1 1 0 001 1h6a1 1 0 001-1V7"/></svg>
+          Trash
+        </span>
+        <span class="text-xs text-neutral-400">{{ nav_counts.trash }}</span>
+      </a>
+      <a href="/profile" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm {{ ACT if path=='/profile' else IDLE }}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M19.4 13a7.9 7.9 0 000-2l2-1.5-2-3.5-2.4 1a8 8 0 00-1.7-1l-.4-2.5h-4l-.4 2.5a8 8 0 00-1.7 1l-2.4-1-2 3.5L4.6 11a7.9 7.9 0 000 2l-2 1.5 2 3.5 2.4-1a8 8 0 001.7 1l.4 2.5h4l.4-2.5a8 8 0 001.7-1l2.4 1 2-3.5z"/></svg>
+        Settings
+      </a>
+    </nav>
+
+    {% include "partials/_sidebar_saved.html" %}
+    {% include "partials/_sidebar_collections.html" %}
+    {% include "partials/_sidebar_tags.html" %}
+
+    <div class="px-3">
+      <a href="/dashboard" class="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 19V5m5 14V9m5 10V4m5 15v-7"/></svg>
+        Dashboard
+      </a>
+    </div>
+  </div>
+</aside>

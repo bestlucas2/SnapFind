@@ -1,0 +1,70 @@
+<header class="h-16 shrink-0 z-20 flex items-center gap-3 px-4 sm:px-6 border-b border-neutral-200/70 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 backdrop-blur">
+
+  <!-- Mobile sidebar toggle -->
+  <button @click="sidebar = !sidebar" class="lg:hidden p-2 -ml-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Menu">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+
+  <!-- Logo -->
+  <a href="/app" class="flex items-center gap-2 shrink-0">
+    <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9V5a2 2 0 012-2h4M21 9V5a2 2 0 00-2-2h-4M3 15v4a2 2 0 002 2h4M21 15v4a2 2 0 01-2 2h-4"/><circle cx="12" cy="12" r="3"/></svg>
+    </span>
+    <span class="font-bold text-lg tracking-tight hidden sm:block">{{ app_name }}</span>
+  </a>
+
+  <!-- Global search -->
+  <form action="/app" method="get" class="flex-1 max-w-2xl mx-auto relative" role="search">
+    <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-3.5-3.5"/></svg>
+    <input
+      type="search" name="q" value="{{ q|default('', true) }}" autocomplete="off"
+      placeholder="Search screenshots…  try  tag:receipt  after:2026-01-01"
+      {% if request.url.path == '/app' %}
+      hx-get="/partials/screenshots" hx-target="#grid" hx-swap="innerHTML"
+      hx-trigger="keyup changed delay:300ms, search" hx-include="this" hx-push-url="false"
+      hx-indicator="#search-spin"
+      {% endif %}
+      class="w-full pl-10 pr-9 py-2.5 rounded-xl text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 focus:bg-white dark:focus:bg-neutral-900 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+    <span id="search-spin" class="htmx-indicator absolute right-3 top-1/2 -translate-y-1/2">
+      <svg class="w-4 h-4 animate-spin text-brand-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+    </span>
+  </form>
+
+  <!-- Actions -->
+  <nav class="flex items-center gap-1 shrink-0">
+    <button @click="upload = true"
+      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+      <span class="hidden sm:inline">Upload</span>
+    </button>
+
+    <a href="/dashboard" title="Stats" class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 hidden md:inline-flex">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 19V5m5 14V9m5 10V4m5 15v-7"/></svg>
+    </a>
+
+    <button onclick="toggleTheme()" title="Toggle theme" class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+      <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
+      <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+    </button>
+
+    <!-- Profile menu -->
+    <div x-data="{ open: false }" class="relative">
+      <button @click="open = !open" class="ml-1 w-9 h-9 rounded-full overflow-hidden bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 font-semibold flex items-center justify-center">
+        {% if current_user.avatar_path %}<img src="/profile/avatar?v={{ asset_version }}" alt="" class="w-full h-full object-cover">{% else %}{{ (current_user.display_name or current_user.email)[0]|upper }}{% endif %}
+      </button>
+      <div x-show="open" @click.outside="open = false" x-transition style="display:none"
+        class="absolute right-0 mt-2 w-52 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-card py-1.5 text-sm z-50">
+        <div class="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
+          <p class="font-medium truncate">{{ current_user.display_name }}</p>
+          <p class="text-xs text-neutral-500 truncate">{{ current_user.email }}</p>
+        </div>
+        <a href="/profile" class="block px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800">Profile &amp; Settings</a>
+        <a href="/dashboard" class="block px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800">Dashboard</a>
+        <form action="/logout" method="post" class="border-t border-neutral-100 dark:border-neutral-800 mt-1 pt-1">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30">Sign out</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+</header>

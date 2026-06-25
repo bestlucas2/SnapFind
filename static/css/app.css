@@ -1,0 +1,46 @@
+/* Alpine: hide elements until initialised */
+[x-cloak] { display: none !important; }
+
+/* HTMX indicators (htmx toggles .htmx-request on the indicator element) */
+.htmx-indicator { opacity: 0; transition: opacity .15s ease; }
+.htmx-request.htmx-indicator { opacity: 1; }
+.htmx-request .htmx-indicator { opacity: 1; }
+
+/* Grid multi-select */
+.ss-card .ss-select-label { opacity: 0; transition: opacity .15s ease; }
+.ss-card:hover .ss-select-label,
+.ss-card.ss-selected .ss-select-label { opacity: 1; }
+.ss-card.ss-selected { outline: 2px solid #6366f1; outline-offset: -2px; }
+
+/* Drag-and-drop assignment highlight */
+.drop-collection.drag-over {
+  outline: 2px dashed #6366f1;
+  outline-offset: -2px;
+  background: rgba(99, 102, 241, 0.10);
+  border-radius: 0.5rem;
+}
+.ss-card.dragging { opacity: .5; }
+
+/* Toasts */
+.toast {
+  pointer-events: auto;
+  padding: .6rem .9rem;
+  border-radius: .75rem;
+  font-size: .875rem;
+  color: #fff;
+  background: #171717;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+  transform: translateY(8px);
+  opacity: 0;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.dark .toast { background: #fafafa; color: #171717; }
+
+/* Tidy native search clear button across browsers */
+input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+/* Subtle scrollbars */
+* { scrollbar-width: thin; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: rgba(120,120,120,.35); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }

@@ -1,0 +1,44 @@
+{% set sel_cls = "px-3 py-2 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none" %}
+<div id="tag-manage-list">
+  {% if manage_tags %}
+  <!-- Merge -->
+  <div class="rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-card mb-5">
+    <h3 class="font-semibold text-sm mb-3">Merge tags</h3>
+    <form hx-post="/tags/merge" hx-target="#tag-manage-list" hx-swap="outerHTML" class="flex flex-wrap items-center gap-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <select name="source_id" required class="{{ sel_cls }}">
+        <option value="" disabled selected>Source tag…</option>
+        {% for t in manage_tags %}<option value="{{ t.id }}">#{{ t.name }}</option>{% endfor %}
+      </select>
+      <span class="text-sm text-neutral-400">into</span>
+      <select name="target_id" required class="{{ sel_cls }}">
+        <option value="" disabled selected>Target tag…</option>
+        {% for t in manage_tags %}<option value="{{ t.id }}">#{{ t.name }}</option>{% endfor %}
+      </select>
+      <button class="px-3 py-2 rounded-lg text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white">Merge</button>
+    </form>
+    <p class="text-xs text-neutral-400 mt-2">The source tag is removed and its screenshots get the target tag (max {{ max_tags }} per image).</p>
+  </div>
+
+  <!-- Rename -->
+  <div class="rounded-2xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900 divide-y divide-neutral-100 dark:divide-neutral-800 shadow-card">
+    {% for t in manage_tags %}
+    <div class="flex items-center gap-3 px-4 py-2.5">
+      <form hx-post="/tags/{{ t.id }}/rename" hx-target="#tag-manage-list" hx-swap="outerHTML" class="flex items-center gap-2 flex-1 min-w-0">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <span class="text-neutral-400">#</span>
+        <input name="name" value="{{ t.name }}" autocomplete="off"
+               class="flex-1 min-w-0 px-2 py-1.5 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none">
+        <button class="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">Rename</button>
+      </form>
+      <span class="text-xs text-neutral-400 shrink-0 w-20 text-right">{{ tag_counts.get(t.id, 0) }} image{{ '' if tag_counts.get(t.id, 0) == 1 else 's' }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-16">
+    <h3 class="text-lg font-semibold">No tags yet</h3>
+    <p class="text-sm text-neutral-500 mt-1">Tags you add to screenshots will show up here to rename or merge.</p>
+  </div>
+  {% endif %}
+</div>

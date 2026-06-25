@@ -1,0 +1,173 @@
+{% extends "app_base.html" %}
+{% block title %}{{ page_title }} · {{ app_name }}{% endblock %}
+{% block content %}
+{% set qs = request.url.query %}
+
+<div class="flex flex-wrap items-center gap-3 mb-5">
+  <div class="min-w-0">
+    <h1 class="text-2xl font-bold tracking-tight truncate">{{ page_title }}</h1>
+    <p class="text-sm text-neutral-500">{{ screenshots|length }} screenshot{{ 's' if screenshots|length != 1 else '' }}</p>
+  </div>
+
+  <div class="flex items-center gap-2 ml-auto">
+    <!-- Filters preserve current context via hidden inputs -->
+    {% set period_labels = {'':'Any time','today':'Today','week':'Last 7 days','month':'Last 30 days'} %}
+    {% set sort_labels = {'newest':'Newest','oldest':'Oldest','name':'Name','size':'Largest'} %}
+    {% set opt_cls = "w-full text-left px-3 py-1.5 rounded-lg text-sm transition hover:bg-brand-50 dark:hover:bg-brand-950/40 hover:ring-1 hover:ring-brand-400" %}
+    {% set sel_cls = "bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 font-medium" %}
+    {% set idle_cls = "text-neutral-700 dark:text-neutral-300" %}
+    {% set trigger_cls = "inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800" %}
+    <form method="get" action="/app" id="filter-form" class="flex items-center gap-2">
+      <input type="hidden" name="q" value="{{ q }}">
+      <input type="hidden" name="view" value="{{ view }}">
+      {% if active_collection %}<input type="hidden" name="collection_id" value="{{ active_collection.id }}">{% endif %}
+      {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag }}">{% endif %}
+      {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
+      <input type="hidden" name="period" id="filter-period" value="{{ period or '' }}">
+      <input type="hidden" name="sort" id="filter-sort" value="{{ sort }}">
+
+      <!-- Period -->
+      <div x-data="{ open: false }" class="relative">
+        <button type="button" @click="open = !open" class="{{ trigger_cls }}">
+          <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 8v4l3 2"/></svg>
+          <span>{{ period_labels[period or ''] }}</span>
+          <svg :class="open ? 'rotate-180' : ''" class="w-3.5 h-3.5 text-neutral-400 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div x-show="open" x-transition @click.outside="open = false" style="display:none"
+             class="absolute right-0 mt-2 w-44 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-card p-1 z-30">
+          {% for val, label in period_labels.items() %}
+          <button type="button"
+                  onclick="document.getElementById('filter-period').value='{{ val }}';document.getElementById('filter-form').submit()"
+                  class="{{ opt_cls }} {{ sel_cls if (period or '') == val else idle_cls }}">{{ label }}</button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Sort -->
+      <div x-data="{ open: false }" class="relative">
+        <button type="button" @click="open = !open" class="{{ trigger_cls }}">
+          <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M7 4v16m0 0l-3-3m3 3l3-3M17 20V4m0 0l-3 3m3-3l3 3"/></svg>
+          <span>{{ sort_labels[sort] }}</span>
+          <svg :class="open ? 'rotate-180' : ''" class="w-3.5 h-3.5 text-neutral-400 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div x-show="open" x-transition @click.outside="open = false" style="display:none"
+             class="absolute right-0 mt-2 w-40 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-card p-1 z-30">
+          {% for val, label in sort_labels.items() %}
+          <button type="button"
+                  onclick="document.getElementById('filter-sort').value='{{ val }}';document.getElementById('filter-form').submit()"
+                  class="{{ opt_cls }} {{ sel_cls if sort == val else idle_cls }}">{{ label }}</button>
+          {% endfor %}
+        </div>
+      </div>
+    </form>
+
+    <!-- Export -->
+    <div x-data="{ open: false }" class="relative">
+      <button @click="open = !open" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+        Export
+      </button>
+      <div x-show="open" @click.outside="open = false" x-transition style="display:none"
+           class="absolute right-0 mt-2 w-40 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-card py-1.5 text-sm z-20">
+        <a href="/export?format=zip{% if qs %}&{{ qs }}{% endif %}" class="block px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800">ZIP (images + data)</a>
+        <a href="/export?format=csv{% if qs %}&{{ qs }}{% endif %}" class="block px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800">CSV</a>
+        <a href="/export?format=json{% if qs %}&{{ qs }}{% endif %}" class="block px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800">JSON</a>
+      </div>
+    </div>
+
+    {% if q %}
+    <!-- Save current search -->
+    <div x-data="{ open: false }" class="relative">
+      <button @click="open = !open" class="{{ trigger_cls }}">
+        <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 4h12a1 1 0 011 1v15l-7-4-7 4V5a1 1 0 011-1z"/></svg>
+        Save
+      </button>
+      <div x-show="open" @click.outside="open = false" x-transition style="display:none"
+           class="absolute right-0 mt-2 w-60 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-card p-2 z-30">
+        <form hx-post="/saved-searches" hx-target="#sidebar-saved" hx-swap="outerHTML" @submit="open = false">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="query" value="{{ q }}">
+          <input name="name" placeholder="Name this search" required autocomplete="off"
+                 class="w-full px-3 py-2 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none">
+          <button class="mt-2 w-full px-3 py-2 rounded-lg text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white">Save search</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if active_collection or active_tag or active_category or q %}
+<div class="flex items-center gap-2 mb-4 text-sm">
+  <span class="text-neutral-500">Filtered by</span>
+  {% if active_collection %}<span class="px-2 py-0.5 rounded-md bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300">{{ active_collection.name }}</span>{% endif %}
+  {% if active_tag %}<span class="px-2 py-0.5 rounded-md bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300">#{{ active_tag }}</span>{% endif %}
+  {% if active_category %}<span class="px-2 py-0.5 rounded-md bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300">{{ active_category }}</span>{% endif %}
+  {% if q %}<span class="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800">“{{ q }}”</span>{% endif %}
+  <a href="/app" class="text-neutral-400 hover:text-red-500">Clear</a>
+</div>
+{% endif %}
+
+<div id="grid"
+     hx-get="/partials/screenshots{% if qs %}?{{ qs }}{% endif %}"
+     hx-trigger="refresh-grid from:body"
+     hx-swap="innerHTML">
+  {% include "partials/_grid.html" %}
+</div>
+
+<!-- Bulk action bar (shown by selection.js when >=1 selected) -->
+{% set bbtn = "px-2.5 py-1.5 rounded-lg text-sm hover:bg-white/10 transition inline-flex items-center gap-1.5" %}
+<div id="bulk-bar" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-[95vw]">
+  <div class="flex items-center gap-1 rounded-2xl bg-neutral-900 dark:bg-neutral-800 text-white shadow-2xl ring-1 ring-white/10 px-2.5 py-2">
+    <span class="text-sm font-medium px-1.5"><span id="bulk-count">0</span> selected</span>
+    <button onclick="window.bulkSelectAll()" class="{{ bbtn }} text-white/80">All</button>
+    <button onclick="window.bulkClear()" class="{{ bbtn }} text-white/80">Clear</button>
+    <div class="w-px h-5 bg-white/20 mx-1"></div>
+
+    {% if view == 'trash' %}
+    <button onclick="window.bulkRestore()" class="{{ bbtn }}">Restore</button>
+    <button onclick="window.bulkPermanent()" class="{{ bbtn }} text-red-300 hover:bg-red-500/20">Delete forever</button>
+    {% else %}
+    <!-- Tag -->
+    <div x-data="{ open: false }" class="relative">
+      <button @click="open = !open" class="{{ bbtn }}">Tag</button>
+      <div x-show="open" @click.outside="open = false" x-transition style="display:none"
+           class="absolute bottom-full mb-2 left-0 w-56 rounded-xl bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-700 shadow-card p-2">
+        <input type="text" placeholder="Tag name + Enter"
+               @keydown.enter.prevent="window.bulkTag($event.target.value); $event.target.value=''; open=false"
+               class="w-full px-3 py-2 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none">
+      </div>
+    </div>
+    <!-- Move -->
+    <div x-data="{ open: false }" class="relative">
+      <button @click="open = !open" class="{{ bbtn }}">Move</button>
+      <div x-show="open" @click.outside="open = false" x-transition style="display:none"
+           class="absolute bottom-full mb-2 left-0 w-56 max-h-60 overflow-y-auto rounded-xl bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-700 shadow-card p-1">
+        <button onclick="window.bulkMove('0')" class="w-full text-left px-3 py-1.5 rounded-lg text-sm hover:bg-brand-50 dark:hover:bg-brand-950/40 hover:ring-1 hover:ring-brand-400">— None —</button>
+        {% for c in sidebar_collections %}
+        <button onclick="window.bulkMove('{{ c.obj.id }}')" class="w-full text-left px-3 py-1.5 rounded-lg text-sm hover:bg-brand-50 dark:hover:bg-brand-950/40 hover:ring-1 hover:ring-brand-400">{{ c.obj.name }}</button>
+        {% endfor %}
+      </div>
+    </div>
+    <button onclick="window.bulkFavorite(true)" class="{{ bbtn }}" title="Favorite">
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 5 4 3 6.5 3c1.5 0 2.9.7 3.8 1.8L12 6.2l1.7-1.4A4.9 4.9 0 0117.5 3C20 3 22 5 22 7.6c0 3.8-3.4 6.9-8.6 11.6z"/></svg>
+    </button>
+    <button onclick="window.bulkArchive(true)" class="{{ bbtn }}">Archive</button>
+    <button onclick="window.bulkRetry()" class="{{ bbtn }}" title="Re-run OCR">Retry OCR</button>
+    <!-- Export -->
+    <div x-data="{ open: false }" class="relative">
+      <button @click="open = !open" class="{{ bbtn }}">Export</button>
+      <div x-show="open" @click.outside="open = false" x-transition style="display:none"
+           class="absolute bottom-full mb-2 right-0 w-40 rounded-xl bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-700 shadow-card p-1">
+        <button onclick="window.bulkExport('zip')" class="w-full text-left px-3 py-1.5 rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800">ZIP</button>
+        <button onclick="window.bulkExport('csv')" class="w-full text-left px-3 py-1.5 rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800">CSV</button>
+        <button onclick="window.bulkExport('json')" class="w-full text-left px-3 py-1.5 rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800">JSON</button>
+      </div>
+    </div>
+    <button onclick="window.bulkDelete()" class="{{ bbtn }} text-red-300 hover:bg-red-500/20" title="Delete">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 7h12M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-7 0v12a1 1 0 001 1h6a1 1 0 001-1V7"/></svg>
+    </button>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+<div id="sidebar-tags" x-data="{ open: true }">
+  <div class="flex items-center px-3 mb-2">
+    <button type="button" @click="open = !open"
+            class="flex items-center gap-2 hover:text-neutral-600 dark:hover:text-neutral-300">
+      <h3 class="text-xs font-semibold uppercase tracking-wider text-neutral-400">Tags</h3>
+      <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500">{{ tags_total }}</span>
+      <svg :class="open ? 'rotate-180' : ''" class="w-3.5 h-3.5 text-neutral-400 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <a href="/tags/manage" title="Manage tags" class="ml-auto p-1 rounded-md text-neutral-400 hover:text-brand-600 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.3 4.3a1 1 0 011.4 0l.8.8a1 1 0 00.9.3l1.1-.2a1 1 0 011.1.7l.4 1a1 1 0 00.7.7l1 .4a1 1 0 01.7 1.1l-.2 1.1a1 1 0 00.3.9l.8.8a1 1 0 010 1.4l-.8.8a1 1 0 00-.3.9l.2 1.1a1 1 0 01-.7 1.1l-1 .4a1 1 0 00-.7.7l-.4 1a1 1 0 01-1.1.7l-1.1-.2a1 1 0 00-.9.3l-.8.8a1 1 0 01-1.4 0l-.8-.8a1 1 0 00-.9-.3l-1.1.2a1 1 0 01-1.1-.7l-.4-1a1 1 0 00-.7-.7l-1-.4a1 1 0 01-.7-1.1l.2-1.1a1 1 0 00-.3-.9l-.8-.8a1 1 0 010-1.4l.8-.8a1 1 0 00.3-.9l-.2-1.1a1 1 0 01.7-1.1l1-.4a1 1 0 00.7-.7l.4-1a1 1 0 011.1-.7l1.1.2a1 1 0 00.9-.3z"/><circle cx="12" cy="12" r="3"/></svg>
+    </a>
+  </div>
+
+  <div x-show="open" x-transition>
+    {% if sidebar_tags %}
+    <div class="flex flex-wrap gap-1.5 px-3">
+      {% for t in sidebar_tags %}
+      <a href="/app?tag={{ t.name|urlencode }}"
+         class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-brand-50 dark:hover:bg-brand-950/40 hover:text-brand-700 dark:hover:text-brand-300 transition">
+        #{{ t.name }}
+      </a>
+      {% endfor %}
+      {% if tags_total > sidebar_tags|length %}
+      <span class="inline-flex items-center px-2 py-1 text-xs text-neutral-400">+{{ tags_total - sidebar_tags|length }} more</span>
+      {% endif %}
+    </div>
+    {% else %}
+    <p class="px-3 text-xs text-neutral-400">Tags appear automatically as you upload.</p>
+    {% endif %}
+  </div>
+</div>

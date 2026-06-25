@@ -1,0 +1,37 @@
+<div class="space-y-3">
+  {% if created or skipped %}
+  <div class="rounded-lg bg-neutral-50 dark:bg-neutral-800/50 p-3 text-sm space-y-1">
+    {% if created %}
+    <p class="text-emerald-600 dark:text-emerald-400 font-medium">
+      ✓ Uploaded {{ created|length }} screenshot{{ 's' if created|length != 1 else '' }} — indexing in the background.
+    </p>
+    {% endif %}
+    {% for s in skipped %}
+    <p class="text-amber-600 dark:text-amber-400">Skipped <strong>{{ s.name }}</strong> — {{ s.reason }}.</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% for d in duplicates %}
+  <div id="dup-{{ d.new.id }}" class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-3">
+    <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Possible duplicate detected</p>
+    <p class="text-xs text-amber-700/80 dark:text-amber-400/80 mt-0.5">
+      “{{ d.new.original_filename }}” looks identical to an existing screenshot, “{{ d.original.filename }}”.
+    </p>
+    <div class="flex flex-wrap gap-2 mt-2">
+      <button onclick="this.closest('#dup-{{ d.new.id }}').remove()"
+              class="px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100">Keep both</button>
+      <button hx-delete="/screenshot/{{ d.new.id }}" hx-target="#dup-{{ d.new.id }}" hx-swap="outerHTML"
+              class="px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100">Skip new</button>
+      <button hx-delete="/screenshot/{{ d.original.id }}" hx-target="#dup-{{ d.new.id }}" hx-swap="outerHTML"
+              hx-confirm="Replace the original with this new upload? The original will be deleted."
+              class="px-2.5 py-1 rounded-md text-xs font-medium bg-amber-600 hover:bg-amber-700 text-white">Replace original</button>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if created %}
+  <button @click="upload = false"
+          class="w-full px-3 py-2 rounded-lg text-sm font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">Done</button>
+  {% endif %}
+</div>

@@ -1,0 +1,92 @@
+{
+  "grocery-receipt": {
+    "text": "WHOLE FOODS MARKET\n123 Main Street\nBananas          $1.29\nAlmond Milk      $3.49\nSourdough Bread  $4.99\nEggs (dozen)     $5.29\nSubtotal         $15.06\nTax              $1.20\nTOTAL            $16.26\nVISA ****1234  APPROVED",
+    "category": "Receipts",
+    "tags": [
+      "receipt",
+      "groceries",
+      "food"
+    ]
+  },
+  "python-traceback": {
+    "text": "Traceback (most recent call last):\n  File \"app.py\", line 42, in <module>\n    main()\n  File \"app.py\", line 30, in main\n    return user.id\nAttributeError: 'NoneType' object\nhas no attribute 'id'",
+    "category": "Code",
+    "tags": [
+      "python",
+      "error",
+      "bug"
+    ]
+  },
+  "react-component": {
+    "text": "import React, { useState } from 'react';\nexport default function Card() {\n  const [open, setOpen] = useState(false);\n  return (\n    <div className=\"card\">\n      <button onClick={() => setOpen(!open)}>\n    </div>\n  );\n}",
+    "category": "Code",
+    "tags": [
+      "react",
+      "javascript",
+      "frontend"
+    ]
+  },
+  "chat-with-alex": {
+    "text": "Alex             10:24 AM\nAre we still on for lunch today?\n\nYou              10:25 AM\nYes! Noon at the cafe on 5th\nDelivered\n\nAlex is typing...",
+    "category": "Chats",
+    "tags": [
+      "chat",
+      "lunch",
+      "alex"
+    ]
+  },
+  "shopping-cart": {
+    "text": "Your Cart (2 items)\nWireless Headphones\n$79.99    Qty: 1\nUSB-C Cable 2m\n$12.49    Qty: 2\nSubtotal: $104.97\nFree shipping on orders over $35\nProceed to checkout",
+    "category": "Shopping",
+    "tags": [
+      "shopping",
+      "checkout",
+      "electronics"
+    ]
+  },
+  "lecture-notes": {
+    "text": "CS 101 - Lecture 5\nTopic: Binary Search Trees\n- O(log n) average lookup time\n- Inorder traversal yields sorted order\n- Balancing keeps height logarithmic\nAssignment 3 due Friday\nRead chapter 7 before the exam",
+    "category": "School",
+    "tags": [
+      "school",
+      "cs101",
+      "notes"
+    ]
+  },
+  "pasta-recipe": {
+    "text": "Creamy Garlic Pasta\nIngredients:\n- 400g spaghetti\n- 3 cloves garlic, minced\n- 1 cup heavy cream\n- Parmesan cheese\nBoil pasta for 9 minutes\nServes 4 people",
+    "category": "Miscellaneous",
+    "tags": [
+      "recipe",
+      "pasta",
+      "dinner"
+    ]
+  },
+  "flight-confirmation": {
+    "text": "Booking Confirmed\nFlight UA 482\nSFO  ->  JFK\nDec 14, 2026   8:15 AM\nSeat 14C   Boarding Group 2\nConfirmation: XR7K9P",
+    "category": "Miscellaneous",
+    "tags": [
+      "flight",
+      "travel",
+      "booking"
+    ]
+  },
+  "wifi-password": {
+    "text": "Guest WiFi Access\nNetwork: CafeGuest\nPassword: latte2026\nEnjoy your stay!",
+    "category": "Miscellaneous",
+    "tags": [
+      "wifi",
+      "password",
+      "cafe"
+    ]
+  },
+  "invoice-1042": {
+    "text": "INVOICE #1042\nAcme Design Co.\nWeb design services\nHours: 12 x $85.00\nSubtotal: $1020.00\nTax (8%): $81.60\nTotal Due: $1101.60\nDue: Jan 15, 2026",
+    "category": "Receipts",
+    "tags": [
+      "invoice",
+      "work",
+      "client"
+    ]
+  }
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="description" content="Find any screenshot in seconds — SnapFind reads the text inside your screenshots with OCR and makes them instantly searchable.">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v={{ asset_version }}">
+  <link rel="apple-touch-icon" href="/static/favicon.svg?v={{ asset_version }}">
+
+  <!-- Apply saved theme before paint to avoid a flash of the wrong mode. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: {
+              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+              800: '#3730a3', 900: '#312e81'
+            }
+          },
+          boxShadow: { card: '0 1px 2px rgba(0,0,0,0.04), 0 6px 20px rgba(0,0,0,0.06)' }
+        }
+      }
+    };
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css?v={{ asset_version }}">
+
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
+  {% block head_extra %}{% endblock %}
+</head>
+<body
+  hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'
+  class="h-full bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 antialiased font-sans">
+  {% block body %}{% endblock %}
+
+  <div id="toast" class="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Custom confirmation dialog (replaces the native hx-confirm popup) -->
+  <div id="confirm-modal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" data-confirm-cancel></div>
+    <div class="relative w-full max-w-sm bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 p-5">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-950/40 text-red-500 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 4.3l-7 12A1 1 0 004 18h16a1 1 0 00.9-1.5l-7-12a1 1 0 00-1.7 0z"/></svg>
+        </div>
+        <div class="min-w-0">
+          <h3 class="font-semibold">Please confirm</h3>
+          <p id="confirm-message" class="text-sm text-neutral-500 mt-1 break-words"></p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button type="button" data-confirm-cancel
+                class="px-4 py-2 rounded-lg text-sm font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800">Cancel</button>
+        <button type="button" id="confirm-ok"
+                class="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-700 text-white">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js?v={{ asset_version }}"></script>
+  <script src="/static/js/upload.js?v={{ asset_version }}"></script>
+  <script src="/static/js/selection.js?v={{ asset_version }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
