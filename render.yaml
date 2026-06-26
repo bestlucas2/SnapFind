@@ -1,0 +1,30 @@
+# Render Blueprint — deploys SnapFind as a Docker web service.
+# In Render: New + → Blueprint → connect this repo. Secrets marked `sync: false`
+# must be filled in the Render dashboard.
+services:
+  - type: web
+    name: snapfind
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true            # Render generates a strong value
+      - key: DATABASE_URL
+        sync: false                    # Supabase Session pooler URI (postgresql+psycopg://...)
+      - key: STORAGE_BACKEND
+        value: supabase
+      - key: STORAGE_BUCKET
+        value: screenshots
+      - key: SUPABASE_URL
+        sync: false                    # https://<project-ref>.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false                    # Supabase → Project Settings → API → service_role
+      - key: SECURE_COOKIES
+        value: "true"
+      - key: DEBUG
+        value: "false"
+      - key: OCR_WORKERS
+        value: "2"
+      - key: APP_NAME
+        value: SnapFind

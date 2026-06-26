@@ -1,24 +1,31 @@
-"""Local object storage helpers. Files are namespaced per-user.
+"""File helpers built on the pluggable storage backend (local or Supabase).
 
-`<STORAGE_DIR>/<user_id>/<random>.<ext>` keeps each user's uploads isolated on
-disk, mirroring the per-user-prefix pattern you'd use with S3/GCS later.
+Paths are per-user relative: "<user_id>/<filename>". Image bytes are passed
+around in memory so the same code works whether files live on local disk or in
+Supabase Storage (where there is no local path to open).
 """
 from __future__ import annotations
 
+import io
 import uuid
 from pathlib import Path
 
 from PIL import Image
 
-from config import settings
+from services.storage import get_storage
 
 THUMB_MAX = (640, 640)
 
+_CONTENT_TYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+}
 
-def user_storage_dir(user_id: int) -> Path:
-    d = settings.storage_path / str(user_id)
-    d.mkdir(parents=True, exist_ok=True)
-    return d
+
+def content_type_for(ext: str) -> str:
+    return _CONTENT_TYPES.get(ext.lower(), "application/octet-stream")
 
 
 def unique_name(ext: str) -> str:
@@ -27,42 +34,41 @@ def unique_name(ext: str) -> str:
 
 
 def save_upload(user_id: int, data: bytes, ext: str) -> str:
-    """Persist bytes, return the stored filename (not the full path)."""
+    """Store raw bytes, return the stored filename (relative to the user dir)."""
     name = unique_name(ext)
-    (user_storage_dir(user_id) / name).write_bytes(data)
+    get_storage().put(f"{user_id}/{name}", data, content_type_for(ext))
     return name
 
 
-def make_thumbnail(user_id: int, source_name: str) -> str | None:
-    """Generate a JPEG thumbnail beside the original. Returns its name."""
+def make_thumbnail(user_id: int, source_name: str, data: bytes) -> str | None:
+    """Build a JPEG thumbnail from the original bytes and store it."""
     try:
-        src = user_storage_dir(user_id) / source_name
-        with Image.open(src) as img:
+        with Image.open(io.BytesIO(data)) as img:
             img = img.convert("RGB")
             img.thumbnail(THUMB_MAX)
-            thumb_name = f"thumb_{Path(source_name).stem}.jpg"
-            img.save(user_storage_dir(user_id) / thumb_name, "JPEG", quality=82)
+            buf = io.BytesIO()
+            img.save(buf, "JPEG", quality=82)
+        thumb_name = f"thumb_{Path(source_name).stem}.jpg"
+        get_storage().put(f"{user_id}/{thumb_name}", buf.getvalue(), "image/jpeg")
         return thumb_name
     except Exception:
         return None
 
 
-def image_dimensions(user_id: int, source_name: str) -> tuple[int | None, int | None]:
+def dimensions_from_bytes(data: bytes) -> tuple[int | None, int | None]:
     try:
-        with Image.open(user_storage_dir(user_id) / source_name) as img:
+        with Image.open(io.BytesIO(data)) as img:
             return img.width, img.height
     except Exception:
         return None, None
 
 
-def abs_path(relpath: str) -> Path:
-    return settings.storage_path / relpath
+def get_bytes(relpath: str | None) -> bytes | None:
+    if not relpath:
+        return None
+    return get_storage().get(relpath)
 
 
 def remove_relpath(relpath: str | None) -> None:
-    if not relpath:
-        return
-    try:
-        (settings.storage_path / relpath).unlink(missing_ok=True)
-    except Exception:
-        pass
+    if relpath:
+        get_storage().delete(relpath)

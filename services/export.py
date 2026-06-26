@@ -8,7 +8,7 @@ import zipfile
 from collections.abc import Sequence
 
 from models import Screenshot
-from utils.files import abs_path
+from utils.files import get_bytes
 
 _CSV_FIELDS = [
     "id", "filename", "original_filename", "category", "collection",
@@ -47,8 +47,8 @@ def to_zip(screenshots: Sequence[Screenshot]) -> bytes:
         zf.writestr("metadata.json", to_json(screenshots))
         zf.writestr("metadata.csv", to_csv(screenshots))
         for shot in screenshots:
-            src = abs_path(shot.storage_relpath)
-            if src.exists():
+            data = get_bytes(shot.storage_relpath)
+            if data is not None:
                 arcname = f"images/{shot.id}_{shot.original_filename}"
-                zf.write(src, arcname)
+                zf.writestr(arcname, data)
     return buf.getvalue()

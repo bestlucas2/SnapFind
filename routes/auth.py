@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
-from fastapi.responses import FileResponse, RedirectResponse, Response
+from fastapi.responses import RedirectResponse, Response
 from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -26,8 +26,9 @@ from config import settings
 from database import get_db
 from models import Collection, Screenshot, User
 from services import export as export_service
+from services.storage import get_storage
 from templating import base_context, templates
-from utils.files import abs_path, user_storage_dir
+from utils.files import get_bytes
 
 router = APIRouter()
 
@@ -199,7 +200,9 @@ async def upload_avatar(
             side = min(w, h)
             left, top = (w - side) // 2, (h - side) // 2
             img = img.crop((left, top, left + side, top + side)).resize((256, 256))
-            img.save(user_storage_dir(user.id) / "avatar.jpg", "JPEG", quality=85)
+            buf = io.BytesIO()
+            img.save(buf, "JPEG", quality=85)
+        get_storage().put(f"{user.id}/avatar.jpg", buf.getvalue(), "image/jpeg")
     except Exception:
         return _profile(request, user, db, error="That image couldn't be processed.", status=400)
     user.avatar_path = f"{user.id}/avatar.jpg"
@@ -214,10 +217,10 @@ def get_avatar(
 ):
     if not user.avatar_path:
         return Response(status_code=404)
-    path = abs_path(user.avatar_path)
-    if not path.exists():
+    data = get_bytes(user.avatar_path)
+    if data is None:
         return Response(status_code=404)
-    return FileResponse(path, media_type="image/jpeg")
+    return Response(data, media_type="image/jpeg")
 
 
 @router.get("/account/export")

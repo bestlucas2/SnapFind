@@ -23,7 +23,7 @@ from services import categorize, ocr, processing
 from services.hashing import perceptual_hash
 from services.tagging import generate_tags, normalize_tag
 from templating import base_context, templates
-from utils.files import image_dimensions, make_thumbnail, save_upload
+from utils.files import dimensions_from_bytes, make_thumbnail, save_upload
 
 router = APIRouter()
 
@@ -104,8 +104,8 @@ async def upload(
             continue
 
         stored = save_upload(user.id, data, ext)
-        width, height = image_dimensions(user.id, stored)
-        thumb = make_thumbnail(user.id, stored)
+        width, height = dimensions_from_bytes(data)
+        thumb = make_thumbnail(user.id, stored, data)
 
         shot = Screenshot(
             user_id=user.id,

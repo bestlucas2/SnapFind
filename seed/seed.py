@@ -24,7 +24,7 @@ from database import SessionLocal, init_db
 from models import Collection, Screenshot, User
 from services import processing
 from services.hashing import perceptual_hash
-from utils.files import image_dimensions, make_thumbnail, remove_relpath, save_upload
+from utils.files import dimensions_from_bytes, make_thumbnail, remove_relpath, save_upload
 from utils.timeutils import utcnow
 
 DEMO_EMAIL = "demo@snapfind.app"
@@ -291,8 +291,8 @@ def main() -> None:
             data = buf.getvalue()
 
             stored = save_upload(user.id, data, ".png")
-            width, height = image_dimensions(user.id, stored)
-            thumb = make_thumbnail(user.id, stored)
+            width, height = dimensions_from_bytes(data)
+            thumb = make_thumbnail(user.id, stored, data)
 
             shot = Screenshot(
                 user_id=user.id,

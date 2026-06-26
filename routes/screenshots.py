@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -19,7 +19,7 @@ from models import MAX_TAGS, STATUS_PROCESSING, Screenshot, Tag, User
 from services import processing
 from services.search import search_screenshots
 from templating import base_context, templates
-from utils.files import abs_path, remove_relpath
+from utils.files import get_bytes, remove_relpath
 from utils.timeutils import utcnow
 
 router = APIRouter()
@@ -108,7 +108,10 @@ def raw_image(
     user: User = Depends(require_user),
 ):
     shot = get_owned_screenshot(screenshot_id, user, db)
-    return FileResponse(abs_path(shot.storage_relpath), media_type=shot.content_type)
+    data = get_bytes(shot.storage_relpath)
+    if data is None:
+        return Response(status_code=404)
+    return Response(data, media_type=shot.content_type)
 
 
 @router.get("/screenshot/{screenshot_id}/thumb")
@@ -118,11 +121,14 @@ def thumb_image(
     user: User = Depends(require_user),
 ):
     shot = get_owned_screenshot(screenshot_id, user, db)
-    rel = shot.thumb_relpath or shot.storage_relpath
-    path = abs_path(rel)
-    if not path.exists():
-        path = abs_path(shot.storage_relpath)
-    return FileResponse(path)
+    data = get_bytes(shot.thumb_relpath) if shot.thumb_relpath else None
+    media = "image/jpeg"
+    if data is None:
+        data = get_bytes(shot.storage_relpath)
+        media = shot.content_type
+    if data is None:
+        return Response(status_code=404)
+    return Response(data, media_type=media)
 
 
 @router.get("/screenshot/{screenshot_id}/download")
@@ -132,10 +138,15 @@ def download_image(
     user: User = Depends(require_user),
 ):
     shot = get_owned_screenshot(screenshot_id, user, db)
-    return FileResponse(
-        abs_path(shot.storage_relpath),
+    data = get_bytes(shot.storage_relpath)
+    if data is None:
+        return Response(status_code=404)
+    return Response(
+        data,
         media_type=shot.content_type,
-        filename=shot.original_filename,
+        headers={
+            "Content-Disposition": f'attachment; filename="{shot.original_filename}"'
+        },
     )
 
 

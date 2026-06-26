@@ -6,10 +6,12 @@ long line. Each job opens its own DB session (sessions aren't thread-safe).
 """
 from __future__ import annotations
 
+import io
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 
+from PIL import Image
 from sqlalchemy import select
 
 from config import settings
@@ -23,7 +25,7 @@ from models import (
     Tag,
 )
 from services import categorize, ocr, tagging
-from utils.files import abs_path, remove_relpath
+from utils.files import get_bytes, remove_relpath
 from utils.timeutils import utcnow
 
 log = logging.getLogger("snapfind.processing")
@@ -60,7 +62,11 @@ def process_screenshot(
     unavailable — this keeps the demo seed working without Tesseract installed.
     """
     try:
-        text = ocr.extract_text(abs_path(shot.storage_relpath))
+        data = get_bytes(shot.storage_relpath)
+        if data is None:
+            raise FileNotFoundError("stored image not found")
+        with Image.open(io.BytesIO(data)) as img:
+            text = ocr.extract_text_from_image(img)
         _index(db, shot, text)
     except ocr.OCRUnavailable as exc:
         if fallback is not None:

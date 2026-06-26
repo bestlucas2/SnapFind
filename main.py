@@ -43,8 +43,21 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=settings.secret_key,
     same_site="lax",
-    https_only=False,
+    https_only=settings.secure_cookies,  # Secure-only cookies in production (HTTPS)
 )
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if settings.secure_cookies:
+        response.headers.setdefault(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
+    return response
 
 # Only the design assets are publicly mounted. User uploads are served through
 # ownership-checked endpoints (see routes/screenshots.py), never statically.

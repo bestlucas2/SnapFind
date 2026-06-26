@@ -27,8 +27,16 @@ class Settings(BaseSettings):
     max_upload_mb: int = 25
     allowed_extensions: set[str] = {".png", ".jpg", ".jpeg", ".webp"}
 
+    # File storage backend: "local" (disk, dev) or "supabase" (Supabase Storage,
+    # for cloud deploys with ephemeral disks). Supabase needs the service role key.
+    storage_backend: str = "local"
+    storage_bucket: str = "screenshots"
+
     ocr_workers: int = 3
     tesseract_cmd: str | None = None
+
+    # Set true in production (HTTPS) so session cookies are Secure-only + HSTS.
+    secure_cookies: bool = False
 
     # External services (optional — leave unset to disable).
     supabase_url: str | None = None
