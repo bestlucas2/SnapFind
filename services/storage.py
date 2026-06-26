@@ -95,7 +95,9 @@ class SupabaseStorage(Storage):
             with urllib.request.urlopen(req, timeout=45) as r:
                 return r.read()
         except urllib.error.HTTPError as e:
-            if e.code == 404:
+            # Supabase returns 400 ("Object not found") rather than 404 for a
+            # missing object on this endpoint; treat both as "not found".
+            if e.code in (400, 404):
                 return None
             raise
 
