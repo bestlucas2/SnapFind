@@ -1,0 +1,21 @@
+{% set active_cat = request.query_params.get('category') %}
+<div id="sidebar-categories"
+     hx-get="/partials/sidebar-categories" hx-trigger="refresh-grid from:body" hx-swap="outerHTML">
+  <h3 class="text-xs font-semibold uppercase tracking-wider text-neutral-400 px-3 mb-2">Categories</h3>
+  {% if sidebar_categories %}
+  <div class="space-y-0.5">
+    {% for c in sidebar_categories %}
+    <a href="/app?category={{ c.name|urlencode }}"
+       class="flex items-center justify-between px-3 py-2 rounded-lg text-sm {{ 'bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 font-semibold' if active_cat == c.name else 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800' }}">
+      <span class="flex items-center gap-3 min-w-0">
+        <svg class="w-4 h-4 shrink-0 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7l8-4 8 4-8 4-8-4zM4 12l8 4 8-4M4 17l8 4 8-4"/></svg>
+        <span class="truncate">{{ c.name }}</span>
+      </span>
+      <span class="text-xs text-neutral-400">{{ c.count }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="px-3 py-1.5 text-xs text-neutral-400">Categories appear as you upload.</p>
+  {% endif %}
+</div>

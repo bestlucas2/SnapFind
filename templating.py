@@ -108,6 +108,20 @@ def sidebar_context(db: Session, user) -> dict:
     ).scalars()
     all_categories = sorted({*CATEGORIES, *(c for c in used_categories if c)})
 
+    # Categories actually in use (live, non-archived), with counts, for the sidebar.
+    cat_count_rows = db.execute(
+        select(Screenshot.category, func.count(Screenshot.id))
+        .where(
+            Screenshot.user_id == user.id,
+            live,
+            Screenshot.archived.is_(False),
+            Screenshot.category.isnot(None),
+        )
+        .group_by(Screenshot.category)
+        .order_by(func.lower(Screenshot.category))
+    ).all()
+    sidebar_categories = [{"name": c, "count": n} for c, n in cat_count_rows if c]
+
     saved_searches = (
         db.execute(
             select(SavedSearch)
@@ -126,6 +140,7 @@ def sidebar_context(db: Session, user) -> dict:
             "trash": trash_count,
         },
         "sidebar_collections": collections,
+        "sidebar_categories": sidebar_categories,
         "sidebar_tags": tags,
         "tags_total": tags_total,
         "all_tag_names": all_tag_names,

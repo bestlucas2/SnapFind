@@ -36,3 +36,14 @@ def screenshots_partial(
         active_tag=tag, active_category=category,
     )
     return templates.TemplateResponse("partials/_grid.html", ctx)
+
+
+@router.get("/partials/sidebar-categories")
+def sidebar_categories_partial(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_user),
+):
+    return templates.TemplateResponse(
+        "partials/_sidebar_categories.html", base_context(request, user, db)
+    )
