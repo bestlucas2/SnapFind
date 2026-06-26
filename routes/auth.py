@@ -186,13 +186,14 @@ def change_email(
 
 
 @router.post("/account/avatar", dependencies=[Depends(verify_csrf)])
-async def upload_avatar(
+def upload_avatar(  # sync: PIL + Supabase Storage upload are blocking
     request: Request,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     user: User = Depends(require_user),
 ):
-    data = await file.read()
+    file.file.seek(0)
+    data = file.file.read()
     try:
         with Image.open(io.BytesIO(data)) as img:
             img = img.convert("RGB")

@@ -37,15 +37,19 @@ def _split_tags(raw: str) -> list[str]:
     return out
 
 
+# Defined as a sync `def` (not async) so FastAPI runs it in a worker thread.
+# The OCR call is blocking + CPU-bound; running it on the event loop would stall
+# every other request (including Render's health check) until it finishes.
 @router.post("/upload/analyze", dependencies=[Depends(verify_csrf)])
-async def analyze(
+def analyze(
     files: list[UploadFile] = File(...),
     user: User = Depends(require_user),
 ):
     """OCR the given images and suggest tags + a category (nothing persisted)."""
     texts: list[str] = []
     for f in files[:8]:
-        data = await f.read()
+        f.file.seek(0)
+        data = f.file.read()
         try:
             with Image.open(io.BytesIO(data)) as img:
                 texts.append(ocr.extract_text_from_image(img))
@@ -66,8 +70,11 @@ async def analyze(
     )
 
 
+# Sync `def`: this does blocking work per file (hashing, thumbnailing, and
+# network uploads to Supabase Storage). FastAPI runs it in a worker thread so the
+# event loop stays free to answer other requests / the health check.
 @router.post("/upload", dependencies=[Depends(verify_csrf)])
-async def upload(
+def upload(
     request: Request,
     files: list[UploadFile] = File(...),
     tags: str = Form(""),
@@ -89,7 +96,8 @@ async def upload(
             skipped.append({"name": name, "reason": "unsupported type"})
             continue
 
-        data = await f.read()
+        f.file.seek(0)
+        data = f.file.read()
         if len(data) > settings.max_upload_bytes:
             skipped.append({"name": name, "reason": f"larger than {settings.max_upload_mb} MB"})
             continue
