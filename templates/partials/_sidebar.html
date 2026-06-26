@@ -1,6 +1,6 @@
 {% set path = request.url.path %}
 {% set v = request.query_params.get('view') %}
-{% set has_filter = request.query_params.get('collection_id') or request.query_params.get('tag') or request.query_params.get('category') %}
+{% set has_filter = request.query_params.get('tag') or request.query_params.get('category') %}
 {% set on_app = path == '/app' %}
 {% set ACT = "bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 font-semibold" %}
 {% set IDLE = "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800" %}
@@ -60,7 +60,6 @@
     </nav>
 
     {% include "partials/_sidebar_saved.html" %}
-    {% include "partials/_sidebar_collections.html" %}
     {% include "partials/_sidebar_categories.html" %}
     {% include "partials/_sidebar_tags.html" %}
 

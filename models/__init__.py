@@ -1,7 +1,6 @@
 """Model package — import order registers all mappers on the metadata."""
 from database import Base
 from models.associations import screenshot_tags
-from models.collection import Collection
 from models.screenshot import (
     CATEGORIES,
     MAX_TAGS,
@@ -17,7 +16,6 @@ from models.user import User
 __all__ = [
     "Base",
     "User",
-    "Collection",
     "Tag",
     "Screenshot",
     "SavedSearch",

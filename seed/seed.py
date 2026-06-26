@@ -21,7 +21,7 @@ from sqlalchemy import func, select
 from auth import hash_password
 from config import BASE_DIR
 from database import SessionLocal, init_db
-from models import Collection, Screenshot, User
+from models import Screenshot, User
 from services import processing
 from services.hashing import perceptual_hash
 from utils.files import dimensions_from_bytes, make_thumbnail, remove_relpath, save_upload
@@ -32,7 +32,6 @@ DEMO_PASSWORD = "demo1234"
 SEED_IMAGE_DIR = BASE_DIR / "seed" / "images"
 MANIFEST_PATH = BASE_DIR / "seed" / "manifest.json"
 
-DEFAULT_COLLECTIONS = ["School", "Projects", "Receipts", "Recipes", "Shopping"]
 
 FONT_PATHS = [
     "C:/Windows/Fonts/arial.ttf",
@@ -249,23 +248,6 @@ def main() -> None:
             db.commit()
             db.refresh(user)
 
-        existing_names = {
-            c.name
-            for c in db.execute(
-                select(Collection).where(Collection.user_id == user.id)
-            ).scalars()
-        }
-        for name in DEFAULT_COLLECTIONS:
-            if name not in existing_names:
-                db.add(Collection(user_id=user.id, name=name))
-        db.commit()
-        collections = {
-            c.name: c
-            for c in db.execute(
-                select(Collection).where(Collection.user_id == user.id)
-            ).scalars()
-        }
-
         count = db.scalar(
             select(func.count(Screenshot.id)).where(Screenshot.user_id == user.id)
         )
@@ -307,9 +289,6 @@ def main() -> None:
                 image_hash=perceptual_hash(image),
                 favorite=spec.get("favorite", False),
             )
-            coll = collections.get(spec.get("collection"))
-            if coll is not None:
-                shot.collection_id = coll.id
             shot.created_at = utcnow() - timedelta(
                 days=spec.get("days_ago", 0), hours=spec.get("hours_ago", 0)
             )

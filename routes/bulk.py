@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from auth import get_owned_collection, require_user, verify_csrf
+from auth import require_user, verify_csrf
 from database import get_db
 from models import STATUS_PROCESSING, Screenshot, User
 from services import export as export_service
@@ -60,21 +60,6 @@ def bulk_tag(
     db.commit()
     return Response(status_code=200)
 
-
-@router.post("/bulk/move", dependencies=[Depends(verify_csrf)])
-def bulk_move(
-    ids: str = Form(""),
-    collection_id: str = Form(""),
-    db: Session = Depends(get_db),
-    user: User = Depends(require_user),
-):
-    target = None
-    if collection_id and collection_id != "0":
-        target = get_owned_collection(int(collection_id), user, db)
-    for shot in _owned(db, user, _parse_ids(ids)):
-        shot.collection_id = target.id if target else None
-    db.commit()
-    return Response(status_code=200)
 
 
 @router.post("/bulk/favorite", dependencies=[Depends(verify_csrf)])

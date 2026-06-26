@@ -75,9 +75,6 @@ class Screenshot(Base):
     notes: Mapped[str] = mapped_column(Text, default="")
     favorite: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     archived: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    collection_id: Mapped[int | None] = mapped_column(
-        ForeignKey("collections.id", ondelete="SET NULL"), nullable=True, index=True
-    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
@@ -91,7 +88,6 @@ class Screenshot(Base):
     )
 
     user = relationship("User", back_populates="screenshots")
-    collection = relationship("Collection", back_populates="screenshots")
     tags = relationship(
         "Tag",
         secondary=screenshot_tags,
@@ -136,7 +132,6 @@ class Screenshot(Base):
             "notes": self.notes,
             "favorite": self.favorite,
             "archived": self.archived,
-            "collection": self.collection.name if self.collection else None,
             "tags": [t.name for t in self.tags],
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }

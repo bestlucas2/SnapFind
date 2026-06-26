@@ -9,7 +9,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from auth import (
-    get_owned_collection,
     get_owned_screenshot,
     require_user,
     verify_csrf,
@@ -62,7 +61,6 @@ def neighbor(
     dir: str = "next",
     q: str = "",
     view: str = "all",
-    collection_id: int | None = None,
     tag: str | None = None,
     category: str | None = None,
     period: str | None = None,
@@ -72,7 +70,7 @@ def neighbor(
 ):
     """Return the id of the previous/next screenshot within the active filter."""
     shots = search_screenshots(
-        db, user, q=q, view=view, collection_id=collection_id,
+        db, user, q=q, view=view,
         tag=tag, category=category, period=period, sort=sort,
     )
     ids = [s.id for s in shots]
@@ -215,26 +213,6 @@ def update_notes(
     return Response(
         '<span class="text-xs text-emerald-500">Saved</span>', media_type="text/html"
     )
-
-
-@router.post("/screenshot/{screenshot_id}/move", dependencies=[Depends(verify_csrf)])
-def move_to_collection(
-    request: Request,
-    screenshot_id: int,
-    collection_id: str = Form(""),
-    db: Session = Depends(get_db),
-    user: User = Depends(require_user),
-):
-    shot = get_owned_screenshot(screenshot_id, user, db)
-    if collection_id and collection_id != "0":
-        collection = get_owned_collection(int(collection_id), user, db)
-        shot.collection_id = collection.id
-    else:
-        shot.collection_id = None
-    db.commit()
-    response = Response(status_code=200)
-    response.headers["HX-Trigger"] = "refresh-grid"
-    return response
 
 
 @router.post("/screenshot/{screenshot_id}/category", dependencies=[Depends(verify_csrf)])

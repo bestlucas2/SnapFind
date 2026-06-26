@@ -13,7 +13,7 @@ from datetime import datetime, time, timedelta, timezone
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
-from models import Collection, Screenshot, Tag, screenshot_tags
+from models import Screenshot, Tag, screenshot_tags
 from utils.search_parser import parse_query
 
 
@@ -27,7 +27,6 @@ def search_screenshots(
     *,
     q: str = "",
     view: str = "all",          # all | favorites | recent | archive
-    collection_id: int | None = None,
     tag: str | None = None,
     category: str | None = None,
     period: str | None = None,  # today | week | month
@@ -39,7 +38,7 @@ def search_screenshots(
     stmt = (
         select(Screenshot)
         .where(Screenshot.user_id == user.id)
-        .options(selectinload(Screenshot.tags), selectinload(Screenshot.collection))
+        .options(selectinload(Screenshot.tags))
     )
 
     # Trash shows only soft-deleted rows; every other view excludes them.
@@ -58,20 +57,10 @@ def search_screenshots(
     if pq.favorite is not None:
         stmt = stmt.where(Screenshot.favorite.is_(pq.favorite))
 
-    if collection_id:
-        stmt = stmt.where(Screenshot.collection_id == collection_id)
-    if pq.collection:
-        stmt = stmt.where(
-            Screenshot.collection_id.in_(
-                select(Collection.id).where(
-                    Collection.user_id == user.id,
-                    func.lower(Collection.name) == pq.collection.lower(),
-                )
-            )
-        )
-
     if category:
         stmt = stmt.where(Screenshot.category == category)
+    if pq.category:
+        stmt = stmt.where(func.lower(Screenshot.category) == pq.category.lower())
 
     # Tags (explicit filter + tag: operators); require ALL specified tags.
     tag_names = [t.lower() for t in pq.tags]

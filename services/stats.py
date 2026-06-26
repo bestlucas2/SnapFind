@@ -10,7 +10,6 @@ from models import (
     STATUS_FAILED,
     STATUS_INDEXED,
     STATUS_PROCESSING,
-    Collection,
     Screenshot,
     Tag,
 )
@@ -42,8 +41,11 @@ def dashboard_stats(db: Session, user) -> dict:
 
     ocr_rate = round((indexed / total_all) * 100) if total_all else 0
 
-    collections_count = (
-        db.scalar(select(func.count(Collection.id)).where(Collection.user_id == user.id)) or 0
+    categories_count = (
+        db.scalar(
+            select(func.count(func.distinct(Screenshot.category))).where(uid)
+        )
+        or 0
     )
     tags_count = db.scalar(
         select(func.count(Tag.id)).where(
@@ -88,7 +90,7 @@ def dashboard_stats(db: Session, user) -> dict:
         "failed": failed,
         "ocr_rate": ocr_rate,
         "storage_bytes": int(storage_bytes),
-        "collections_count": collections_count,
+        "categories_count": categories_count,
         "tags_count": tags_count,
         "categories": categories,
         "trend": trend,

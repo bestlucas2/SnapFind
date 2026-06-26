@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from auth import ensure_csrf_token
 from config import BASE_DIR, settings
-from models import CATEGORIES, MAX_TAGS, Collection, SavedSearch, Screenshot, Tag
+from models import CATEGORIES, MAX_TAGS, SavedSearch, Screenshot, Tag
 from utils.linkify import linkify_ocr
 from utils.timeutils import humanize
 
@@ -64,20 +64,6 @@ def sidebar_context(db: Session, user) -> dict:
     trash_count = db.scalar(
         select(func.count(Screenshot.id)).where(uid, Screenshot.deleted_at.isnot(None))
     ) or 0
-
-    coll_rows = db.execute(
-        select(Collection, func.count(Screenshot.id))
-        .outerjoin(
-            Screenshot,
-            (Screenshot.collection_id == Collection.id)
-            & (Screenshot.archived.is_(False))
-            & (Screenshot.deleted_at.is_(None)),
-        )
-        .where(Collection.user_id == user.id)
-        .group_by(Collection.id)
-        .order_by(func.lower(Collection.name))
-    ).all()
-    collections = [{"obj": c, "count": n} for c, n in coll_rows]
 
     # Only surface tags attached to at least one live (non-trashed) screenshot.
     used = Tag.screenshots.any(Screenshot.deleted_at.is_(None))
@@ -139,7 +125,6 @@ def sidebar_context(db: Session, user) -> dict:
             "archive": archive_count,
             "trash": trash_count,
         },
-        "sidebar_collections": collections,
         "sidebar_categories": sidebar_categories,
         "sidebar_tags": tags,
         "tags_total": tags_total,

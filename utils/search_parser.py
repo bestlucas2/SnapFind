@@ -1,6 +1,7 @@
 """Parse the global search box into structured filters + free text.
 
-Supported operators:  before:  after:  tag:  collection:  favorite:
+Supported operators:  before:  after:  tag:  category:  favorite:
+(collection: / col: are kept as aliases for category:)
 Everything else is treated as free-text matched against OCR text, filename and
 notes. Quotes group a phrase, e.g.  tag:"order #123"  amazon
 """
@@ -15,7 +16,7 @@ from datetime import date, datetime
 class ParsedQuery:
     text: str = ""
     tags: list[str] = field(default_factory=list)
-    collection: str | None = None
+    category: str | None = None
     favorite: bool | None = None
     before: date | None = None
     after: date | None = None
@@ -23,7 +24,7 @@ class ParsedQuery:
     @property
     def is_empty(self) -> bool:
         return not any(
-            [self.text, self.tags, self.collection, self.favorite is not None,
+            [self.text, self.tags, self.category, self.favorite is not None,
              self.before, self.after]
         )
 
@@ -58,10 +59,15 @@ def parse_query(raw: str) -> ParsedQuery:
             val = tok[4:].strip().lower()
             if val:
                 pq.tags.append(val)
-        elif low.startswith("collection:") or low.startswith("col:"):
+        elif (
+            low.startswith("category:")
+            or low.startswith("cat:")
+            or low.startswith("collection:")  # backwards-compat alias
+            or low.startswith("col:")
+        ):
             val = tok.split(":", 1)[1].strip()
             if val:
-                pq.collection = val
+                pq.category = val
         elif low.startswith("favorite:") or low.startswith("fav:"):
             val = tok.split(":", 1)[1].strip().lower()
             if val in _TRUTHY:

@@ -72,21 +72,6 @@
       </button>
     </div>
 
-    <!-- Collection -->
-    <div>
-      <label class="text-xs font-semibold uppercase tracking-wider text-neutral-400">Collection</label>
-      <form hx-post="/screenshot/{{ shot.id }}/move" data-toast="Moved" class="mt-1">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <select name="collection_id" onchange="htmx.trigger(this.form, 'submit')"
-                class="w-full px-3 py-2 rounded-lg text-sm bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-brand-400 outline-none">
-          <option value="0">— None —</option>
-          {% for c in all_collections %}
-          <option value="{{ c.id }}" {{ 'selected' if shot.collection_id == c.id else '' }}>{{ c.name }}</option>
-          {% endfor %}
-        </select>
-      </form>
-    </div>
-
     <!-- Category -->
     <div>
       <label class="text-xs font-semibold uppercase tracking-wider text-neutral-400">Category</label>

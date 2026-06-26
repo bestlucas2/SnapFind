@@ -220,51 +220,6 @@
     if (modal && !modal.classList.contains("hidden")) hideConfirm();
   });
 
-  // --- Drag screenshots onto collections ---------------------------------- //
-  let draggedId = null;
-  document.addEventListener("dragstart", function (e) {
-    const card = e.target.closest && e.target.closest(".ss-card");
-    if (!card) return;
-    draggedId = card.dataset.screenshotId;
-    card.classList.add("dragging");
-    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
-  });
-  document.addEventListener("dragend", function (e) {
-    const card = e.target.closest && e.target.closest(".ss-card");
-    if (card) card.classList.remove("dragging");
-    draggedId = null;
-  });
-  document.addEventListener("dragover", function (e) {
-    const target = e.target.closest && e.target.closest(".drop-collection");
-    if (target && draggedId) { e.preventDefault(); target.classList.add("drag-over"); }
-  });
-  document.addEventListener("dragleave", function (e) {
-    const target = e.target.closest && e.target.closest(".drop-collection");
-    if (target) target.classList.remove("drag-over");
-  });
-  document.addEventListener("drop", function (e) {
-    const target = e.target.closest && e.target.closest(".drop-collection");
-    if (!target || !draggedId) return;
-    e.preventDefault();
-    target.classList.remove("drag-over");
-    const id = draggedId;
-    const collectionId = target.dataset.collectionId;
-    const body = new FormData();
-    body.append("collection_id", collectionId);
-    fetch("/screenshot/" + id + "/move", {
-      method: "POST",
-      headers: { "X-CSRF-Token": csrf() },
-      body: body,
-    }).then((r) => {
-      if (r.ok) {
-        window.toast("Moved to " + (target.innerText || "collection").trim().split("\n")[0]);
-        if (window.htmx) window.htmx.trigger(document.body, "refresh-grid");
-      } else {
-        window.toast("Move failed");
-      }
-    });
-  });
-
   // --- Viewer: zoom & pan ------------------------------------------------- //
   function initZoom() {
     const img = document.getElementById("zoom-img");

@@ -12,14 +12,6 @@
 .ss-card.ss-selected .ss-select-label { opacity: 1; }
 .ss-card.ss-selected { outline: 2px solid #6366f1; outline-offset: -2px; }
 
-/* Drag-and-drop assignment highlight */
-.drop-collection.drag-over {
-  outline: 2px dashed #6366f1;
-  outline-offset: -2px;
-  background: rgba(99, 102, 241, 0.10);
-  border-radius: 0.5rem;
-}
-.ss-card.dragging { opacity: .5; }
 
 /* Toasts */
 .toast {

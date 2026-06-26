@@ -2,7 +2,6 @@
 from routes import (
     auth,
     bulk,
-    collections,
     export,
     pages,
     saved,
@@ -18,7 +17,6 @@ __all__ = [
     "upload",
     "screenshots",
     "search",
-    "collections",
     "tags",
     "export",
     "bulk",

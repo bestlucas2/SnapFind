@@ -14,7 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Collection, Screenshot, Tag, User
+from models import Screenshot, Tag, User
 
 
 # --------------------------------------------------------------------------- #
@@ -136,19 +136,6 @@ def get_owned_screenshot(
     ).scalar_one_or_none()
     if obj is None:
         raise HTTPException(status_code=404, detail="Screenshot not found")
-    return obj
-
-
-def get_owned_collection(
-    collection_id: int, user: User, db: Session
-) -> Collection:
-    obj = db.execute(
-        select(Collection).where(
-            Collection.id == collection_id, Collection.user_id == user.id
-        )
-    ).scalar_one_or_none()
-    if obj is None:
-        raise HTTPException(status_code=404, detail="Collection not found")
     return obj
 
 

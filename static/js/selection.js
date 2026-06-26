@@ -105,10 +105,6 @@
     if (!name || !selected.size) return;
     postBulk("/bulk/tag", { tag: name }).then(() => afterMutation("Tagged"));
   };
-  window.bulkMove = function (cid) {
-    if (!selected.size) return;
-    postBulk("/bulk/move", { collection_id: cid }).then(() => afterMutation("Moved"));
-  };
   window.bulkFavorite = function (v) {
     if (!selected.size) return;
     postBulk("/bulk/favorite", { favorite: v ? "1" : "0" }).then(() =>

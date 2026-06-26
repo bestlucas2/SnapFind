@@ -24,7 +24,7 @@ from auth import (
 )
 from config import settings
 from database import get_db
-from models import Collection, Screenshot, User
+from models import Screenshot, User
 from services import export as export_service
 from services.storage import get_storage
 from templating import base_context, templates
@@ -36,20 +36,6 @@ router = APIRouter()
 def _profile(request, user, db, *, message=None, error=None, status=200):
     ctx = base_context(request, user, db, message=message, error=error)
     return templates.TemplateResponse("auth/profile.html", ctx, status_code=status)
-
-DEFAULT_COLLECTIONS = [
-    ("School", "graduation-cap"),
-    ("Projects", "rocket"),
-    ("Receipts", "receipt"),
-    ("Recipes", "chef-hat"),
-    ("Shopping", "shopping-bag"),
-]
-
-
-def _seed_default_collections(db: Session, user: User) -> None:
-    for name, icon in DEFAULT_COLLECTIONS:
-        db.add(Collection(user_id=user.id, name=name, icon=icon))
-    db.commit()
 
 
 @router.get("/login")
@@ -110,7 +96,6 @@ def register_submit(
         return fail("An account with that email already exists.")
 
     user = create_user(db, email_norm, password, display_name)
-    _seed_default_collections(db, user)
     login_session(request, user)
     return RedirectResponse("/app", status_code=303)
 

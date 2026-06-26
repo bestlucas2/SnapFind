@@ -28,12 +28,6 @@ class User(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    collections = relationship(
-        "Collection",
-        back_populates="user",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )
     tags = relationship(
         "Tag",
         back_populates="user",

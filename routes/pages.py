@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from auth import get_optional_user, get_owned_collection, require_user
+from auth import get_optional_user, require_user
 from database import get_db
-from models import Collection, User
+from models import User
 from services.search import search_screenshots, search_snippets
 from services.stats import dashboard_stats
 from templating import base_context, templates
@@ -32,7 +31,6 @@ def app_grid(
     request: Request,
     q: str = "",
     view: str = "all",
-    collection_id: int | None = None,
     tag: str | None = None,
     category: str | None = None,
     period: str | None = None,
@@ -41,11 +39,8 @@ def app_grid(
     user: User = Depends(require_user),
 ):
     shots = search_screenshots(
-        db, user, q=q, view=view, collection_id=collection_id,
+        db, user, q=q, view=view,
         tag=tag, category=category, period=period, sort=sort,
-    )
-    active_collection = (
-        get_owned_collection(collection_id, user, db) if collection_id else None
     )
     titles = {
         "all": "All Screenshots",
@@ -55,9 +50,7 @@ def app_grid(
         "trash": "Trash",
     }
     page_title = titles.get(view, "All Screenshots")
-    if active_collection:
-        page_title = active_collection.name
-    elif tag:
+    if tag:
         page_title = f"#{tag}"
     elif category:
         page_title = category
@@ -67,7 +60,6 @@ def app_grid(
         screenshots=shots,
         snippets=search_snippets(shots, q),
         view=view, q=q, sort=sort, period=period,
-        active_collection=active_collection,
         active_tag=tag, active_category=category,
         page_title=page_title,
     )
@@ -112,17 +104,5 @@ def viewer(
     from auth import get_owned_screenshot
 
     shot = get_owned_screenshot(screenshot_id, user, db)
-    all_collections = (
-        db.execute(
-            select(Collection)
-            .where(Collection.user_id == user.id)
-            .order_by(Collection.name)
-        )
-        .scalars()
-        .all()
-    )
-    ctx = base_context(
-        request, user, db, shot=shot, all_collections=all_collections,
-        page_title=shot.filename,
-    )
+    ctx = base_context(request, user, db, shot=shot, page_title=shot.filename)
     return templates.TemplateResponse("pages/viewer.html", ctx)

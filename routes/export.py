@@ -27,7 +27,6 @@ def export_screenshots(
     format: str = "json",
     q: str = "",
     view: str = "all",
-    collection_id: int | None = None,
     tag: str | None = None,
     category: str | None = None,
     period: str | None = None,
@@ -39,7 +38,7 @@ def export_screenshots(
         fmt = "json"
 
     shots = search_screenshots(
-        db, user, q=q, view=view, collection_id=collection_id,
+        db, user, q=q, view=view,
         tag=tag, category=category, period=period,
     )
 
