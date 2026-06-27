@@ -38,6 +38,13 @@ class Settings(BaseSettings):
     # Set true in production (HTTPS) so session cookies are Secure-only + HSTS.
     secure_cookies: bool = False
 
+    # Login brute-force throttle. After `login_max_attempts` failures (counted
+    # per client IP and per email within the window) the key is locked out for
+    # `login_lockout_seconds`. Tune via env if needed.
+    login_max_attempts: int = 5
+    login_window_seconds: int = 900       # 15 min window for counting failures
+    login_lockout_seconds: int = 900      # 15 min cooldown once the limit trips
+
     # External services (optional — leave unset to disable).
     supabase_url: str | None = None
     supabase_anon_key: str | None = None
