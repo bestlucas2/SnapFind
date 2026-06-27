@@ -29,6 +29,12 @@ from services import export as export_service
 from services.storage import get_storage
 from templating import base_context, templates
 from utils.files import get_bytes
+from utils.ratelimit import (
+    client_ip,
+    login_block_seconds,
+    record_login_failure,
+    record_login_success,
+)
 
 router = APIRouter()
 
@@ -52,12 +58,29 @@ def login_submit(
     password: str = Form(...),
     db: Session = Depends(get_db),
 ):
+    ip = client_ip(request)
+    email_norm = email.strip().lower()
+
+    wait = login_block_seconds(ip, email_norm)
+    if wait:
+        minutes = max(1, round(wait / 60))
+        ctx = base_context(
+            request,
+            None,
+            error=f"Too many login attempts. Please try again in about {minutes} minute(s).",
+            email=email,
+        )
+        return templates.TemplateResponse("auth/login.html", ctx, status_code=429)
+
     user = authenticate(db, email, password)
     if not user:
+        record_login_failure(ip, email_norm)
         ctx = base_context(
             request, None, error="Invalid email or password.", email=email
         )
         return templates.TemplateResponse("auth/login.html", ctx, status_code=400)
+
+    record_login_success(ip, email_norm)
     login_session(request, user)
     return RedirectResponse("/app", status_code=303)
 

@@ -48,11 +48,22 @@ def create_user(db: Session, email: str, password: str, display_name: str) -> Us
     return user
 
 
+# Pre-computed hash of a value no one can log in with. When the email doesn't
+# exist we still run a bcrypt comparison against this, so the response time
+# matches the "user found, wrong password" path and an attacker can't enumerate
+# accounts by timing the login endpoint.
+_DUMMY_PASSWORD_HASH = hash_password(secrets.token_urlsafe(32))
+
+
 def authenticate(db: Session, email: str, password: str) -> User | None:
     user = db.execute(
         select(User).where(User.email == email.strip().lower())
     ).scalar_one_or_none()
-    if user and verify_password(password, user.password_hash):
+    if user is None:
+        # Spend roughly the same time as a real bcrypt check before failing.
+        verify_password(password, _DUMMY_PASSWORD_HASH)
+        return None
+    if verify_password(password, user.password_hash):
         return user
     return None
 
